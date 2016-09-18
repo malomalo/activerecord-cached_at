@@ -1,4 +1,4 @@
-# CachedAt
+# ActiveRecord - CachedAt
 
 This gem causes ActiveRecord to update a `cached_at` column if present, like the
 `updated_at` column.
