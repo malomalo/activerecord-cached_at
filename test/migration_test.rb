@@ -1,6 +1,12 @@
 require 'test_helper'
 
 class MigrationTest < ActiveSupport::TestCase
+  
+  # schema do
+  # end
+  
+  class Mountain < ActiveRecord::Base
+  end
 
   test 'timestamps' do
     ActiveRecord::Migration.suppress_messages do

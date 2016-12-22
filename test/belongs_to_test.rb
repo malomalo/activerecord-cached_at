@@ -1,11 +1,35 @@
 require 'test_helper'
 
 class BelongsToTest < ActiveSupport::TestCase
+  
+  schema do
+    create_table "organizations", force: :cascade do |t|
+      t.string   "name",                limit: 255
+      t.datetime 'cached_at',           null: false
+      t.datetime 'accounts_cached_at',  null: false
+    end
 
+    create_table "accounts", force: :cascade do |t|
+      t.string   "name",                    limit: 255
+      t.datetime 'cached_at',               null: false
+      t.integer  "organization_id"
+      t.datetime 'organization_cached_at',  null: false
+    end
+  end
+
+  class Organization < ActiveRecord::Base
+    has_many :accounts, cached_at: true, inverse_of: :organization
+  end
+
+  class Account < ActiveRecord::Base
+    belongs_to :organization, cached_at: true, inverse_of: :accounts
+  end
+  
   test "::create" do
     org = Organization.create
     time = Time.now + 60
-    model = travel_to(time) do
+    
+    travel_to(time) do
       Account.create(organization: org)
     end
     
@@ -42,6 +66,17 @@ class BelongsToTest < ActiveSupport::TestCase
     travel_to(time) { account.destroy }
     
     assert_equal time.to_i, org.reload.accounts_cached_at.to_i
+  end
+  
+  test ".relationships = nil" do
+    org = Organization.create
+    account = Account.create(organization: org)
+    time = Time.now + 60
+    
+    travel_to(time) { account.update(organization: nil) }
+    
+    assert_equal time.to_i, org.reload.accounts_cached_at.to_i
+    assert_equal time.to_i, account.reload.organization_cached_at.to_i
   end
   
 end

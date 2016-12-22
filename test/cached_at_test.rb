@@ -2,6 +2,24 @@ require 'test_helper'
 
 class CachedAtTest < ActiveSupport::TestCase
 
+  schema do
+    create_table "accounts", force: :cascade do |t|
+      t.string   "name",                    limit: 255
+      t.datetime 'cached_at',               null: false
+      t.integer  "organization_id"
+      t.datetime 'organization_cached_at',  null: false
+    end
+    
+    create_table "regions", force: :cascade do |t|
+    end
+  end
+  
+  class Account < ActiveRecord::Base
+  end
+  
+  class Region < ActiveRecord::Base
+  end
+  
   test "::create" do
     time = Time.now
     model = travel_to(time) do
