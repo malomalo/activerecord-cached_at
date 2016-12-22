@@ -12,7 +12,6 @@ require 'active_record/cached_at'
 
 # Setup the test db
 ActiveSupport.test_order = :random
-require File.expand_path('../database', __FILE__)
 
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
@@ -37,11 +36,15 @@ class ActiveSupport::TestCase
   end
   
   set_callback(:setup, :before) do
-    if !instance_variable_defined?(:@suite_setup_run) && self.class.class_variable_defined?(:@@schema)
+    ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
 
+    if !instance_variable_defined?(:@suite_setup_run) && self.class.class_variable_defined?(:@@schema)
       ActiveRecord::Migration.suppress_messages do
-        ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
         ActiveRecord::Schema.define(&self.class.class_variable_get(:@@schema))
+        ActiveRecord::Base.connection.data_sources.each do |table|
+          next if table == 'ar_internal_metadata'
+          ActiveRecord::Migration.execute("INSERT INTO SQLITE_SEQUENCE (name,seq) VALUES ('#{table}', #{rand(50_000)})")
+        end
       end
     end
     @suite_setup_run = true
