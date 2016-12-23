@@ -68,7 +68,7 @@ class BelongsToTest < ActiveSupport::TestCase
     assert_equal time.to_i, org.reload.accounts_cached_at.to_i
   end
   
-  test ".relationships = nil" do
+  test ".relationship = nil" do
     org = Organization.create
     account = Account.create(organization: org)
     time = Time.now + 60

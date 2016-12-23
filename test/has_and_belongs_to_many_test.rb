@@ -71,16 +71,46 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
   end
   
   test "relationship = [...]" do
+    email = Email.create
+    message = EmailMessage.create
+
+    time = Time.now + 60
+    travel_to(time) { message.emails = [email] }
+    
+    assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
+  end
+  
+  test "inverse_relationship = [...]" do
+    email = Email.create
+    message = EmailMessage.create
+
+    time = Time.now + 60
+    travel_to(time) { email.email_messages = [message] }
+    
+    assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
+  end
+  
+  test "relationship model added via = [...]" do
     email1 = Email.create
     email2 = Email.create
-    email3 = Email.create
     message = EmailMessage.create(emails: [email1])
+
+    time = Time.now + 60
+    travel_to(time) { message.emails = [email1, email2] }
+    
+    assert_equal time.to_i, email2.reload.email_messages_cached_at.to_i
+  end
+  
+  test "relationship model removed via = [...]" do
+    email1 = Email.create
+    email2 = Email.create
+    message = EmailMessage.create(emails: [email1, email2])
 
     time = Time.now + 60
     travel_to(time) { message.emails = [email2] }
     
     assert_equal time.to_i, email1.reload.email_messages_cached_at.to_i
-    assert_equal time.to_i, email2.reload.email_messages_cached_at.to_i
+    # assert_equal time.to_i, email2.reload.email_messages_cached_at.to_i
   end
   
   test "relationship.clear" do

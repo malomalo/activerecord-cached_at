@@ -73,16 +73,33 @@ module A
   # end
   
   def concat_records(records, should_raise = false)
-    if reflection.parent_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
-      reflection.parent_reflection.touch_records_added_cached_at(records, Time.now)
+    value = super
+    
+    if reflection.is_a?(ActiveRecord::Reflection::ThroughReflection)
+      if reflection.parent_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
+        reflection.parent_reflection.touch_records_added_cached_at(owner, records, Time.now)
+      elsif reflection.is_a?(ActiveRecord::Reflection::ThroughReflection)
+        if !owner.new_record?
+
+          reflection.inverse_of&.touch_records_added_cached_at(owner, records, Time.now)
+        end
+      else
+        # puts reflection.inspect
+      end
     end
     
-    super
+    value
   end
   
   def remove_records(existing_records, records, method)
     if reflection.parent_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
-      reflection.parent_reflection.touch_records_added_cached_at(existing_records, Time.now)
+      reflection.parent_reflection.touch_records_added_cached_at(owner, existing_records, Time.now)
+    elsif reflection.is_a?(ActiveRecord::Reflection::ThroughReflection)
+      if !owner.new_record?
+        reflection.inverse_of&.touch_records_added_cached_at(owner, records, Time.now)
+      end
+    else
+      # puts reflection.inspect
     end
     
     super

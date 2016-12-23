@@ -5,8 +5,10 @@ class HasManyTest < ActiveSupport::TestCase
   schema do
     create_table "organizations", force: :cascade do |t|
       t.string   "name",                limit: 255
+      t.datetime "updated_at",          null: false
       t.datetime 'cached_at',           null: false
       t.datetime 'accounts_cached_at',  null: false
+      
     end
 
     create_table "accounts", force: :cascade do |t|
@@ -55,6 +57,18 @@ class HasManyTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) { org.update(name: 'new name') }
+
+    assert_equal time.to_i, account.reload.organization_cached_at.to_i
+  end
+  
+  test "::touch" do
+    org = Organization.create
+    account = Account.create(organization: org)
+
+    time = Time.now + 60
+    debug do
+    travel_to(time) { org.touch }
+  end
 
     assert_equal time.to_i, account.reload.organization_cached_at.to_i
   end

@@ -50,4 +50,11 @@ class ActiveSupport::TestCase
     @suite_setup_run = true
   end
   
+  def debug
+    ActiveRecord::Base.logger = Logger.new(STDOUT)
+    yield
+  ensure
+    ActiveRecord::Base.logger = nil
+  end
+  
 end

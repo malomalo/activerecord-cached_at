@@ -32,11 +32,13 @@ module ActiveRecord
     end
     
     included do
-      before_destroy    :timeit
-      after_touch       :update_relations_cached_at_from_cached_at
-      after_save        :update_relations_cached_at_from_cached_at
-      before_destroy    :update_relations_cached_at
       before_save       :update_belongs_to_cached_at_keys
+      before_destroy    { update_relations_cached_at(method: :destroy) }
+      after_touch       { update_relations_cached_at_from_cached_at(method: :touch) }
+
+      after_save     :update_relations_cached_at_from_cached_at
+
+
       after_commit      :cleanup
       after_rollback    :cleanup
     end
@@ -46,21 +48,22 @@ module ActiveRecord
     
     private
       
-    def timeit
-      Thread.current[:cached_at_timestamp] ||= current_time_from_proper_timezone
-    end
-    
     def cleanup
       Thread.current[:cached_at_timestamp] = nil
     end
     
-    def update_relations_cached_at_from_cached_at
-      update_relations_cached_at(timestamp: self.class.column_names.include?('cached_at') ? cached_at : nil)
+    def update_relations_cached_at_from_cached_at(method: nil)
+      update_relations_cached_at({
+        timestamp: (self.class.column_names.include?('cached_at') ? cached_at : nil),
+        method: method
+      })
     end
     
-    def update_relations_cached_at(timestamp: nil)
+    def update_relations_cached_at(timestamp: nil, method: nil)
+      return if (method == nil && changes.empty?) && method != :destroy && method != :touch
       timestamp ||= current_time_from_proper_timezone
-      
+      Thread.current[:cached_at_timestamp] = timestamp if method == :destroy
+
       self.class.reflect_on_all_associations.each do |reflection|
         # puts [self.class.name, reflection.name, reflection.class.name].inspect
         case reflection

@@ -45,17 +45,6 @@ class HasManyThroughTest < ActiveSupport::TestCase
 
     assert_equal time.to_i, ship.reload.images_cached_at.to_i
     # assert_equal time.to_i, image.reload.ships_cached_at.to_i
-    
-    #
-    # image = Image.create
-    #
-    # time = Time.now + 60
-    # travel_to(time) do
-    #   Ship.create(images: [ship])
-    # end
-    #
-    # assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.images_cached_at.to_i
   end
 
   test "::update" do
@@ -68,6 +57,7 @@ class HasManyThroughTest < ActiveSupport::TestCase
     end
 
     assert_equal time.to_i, ship.reload.images_cached_at.to_i
+    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
   end
 
   test "::destroy" do
@@ -81,5 +71,40 @@ class HasManyThroughTest < ActiveSupport::TestCase
 
     assert_equal time.to_i, ship.reload.images_cached_at.to_i
   end
+  
+  test "relationship model added via <<" do
+    ship = Ship.create
+    image = Image.create
+    
+    time = Time.now + 60
+    travel_to(time) { ship.images << image }
+    
+    assert_equal time.to_i, ship.reload.images_cached_at.to_i
+    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+  end
+  
+  test "relationship set via = [...]" do
+    ship = Ship.create
+    image = Image.create
+    
+    time = Time.now + 60
+    travel_to(time) { ship.images = [image] }
+    
+    assert_equal time.to_i, ship.reload.images_cached_at.to_i
+    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+  end
+  
+  test "relationship model removed via = [...]" do
+    image1 = Image.create
+    image2 = Image.create
+    ship = Ship.create(images: [image1, image2])
+
+    time = Time.now + 60
+    travel_to(time) { ship.images = [image2] }
+    
+    assert_equal time.to_i, ship.reload.images_cached_at.to_i
+    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+  end
+
 
 end
