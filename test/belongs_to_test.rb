@@ -32,7 +32,11 @@ class BelongsToTest < ActiveSupport::TestCase
     travel_to(time) do
       Account.create(organization: org)
     end
+
+    # Memory
+    assert_equal time.to_i, org.accounts_cached_at.to_i
     
+    # DB
     assert_equal time.to_i, org.reload.accounts_cached_at.to_i
   end
   
@@ -42,7 +46,11 @@ class BelongsToTest < ActiveSupport::TestCase
     time = Time.now + 60
     
     travel_to(time) { account.update(name: 'new name') }
+
+    # Memory
+    assert_equal time.to_i, org.accounts_cached_at.to_i
     
+    # DB
     assert_equal time.to_i, org.reload.accounts_cached_at.to_i
   end
   
@@ -53,7 +61,12 @@ class BelongsToTest < ActiveSupport::TestCase
     time = Time.now + 60
     
     travel_to(time) { account.update(organization: neworg) }
+
+    # Memory
+    assert_equal time.to_i, neworg.accounts_cached_at.to_i
+    assert_equal time.to_i, oldorg.accounts_cached_at.to_i
     
+    # DB
     assert_equal time.to_i, neworg.reload.accounts_cached_at.to_i
     assert_equal time.to_i, oldorg.reload.accounts_cached_at.to_i
   end
@@ -64,7 +77,11 @@ class BelongsToTest < ActiveSupport::TestCase
     time = Time.now + 60
     
     travel_to(time) { account.destroy }
+
+    # Memory
+    assert_equal time.to_i, org.accounts_cached_at.to_i
     
+    # DB
     assert_equal time.to_i, org.reload.accounts_cached_at.to_i
   end
   
@@ -75,6 +92,11 @@ class BelongsToTest < ActiveSupport::TestCase
     
     travel_to(time) { account.update(organization: nil) }
     
+    # Memory
+    assert_equal time.to_i, org.accounts_cached_at.to_i
+    assert_equal time.to_i, account.organization_cached_at.to_i
+    
+    # DB
     assert_equal time.to_i, org.reload.accounts_cached_at.to_i
     assert_equal time.to_i, account.reload.organization_cached_at.to_i
   end

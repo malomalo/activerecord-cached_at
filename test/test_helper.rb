@@ -52,9 +52,11 @@ class ActiveSupport::TestCase
   
   def debug
     ActiveRecord::Base.logger = Logger.new(STDOUT)
+    $debugging = true
     yield
   ensure
     ActiveRecord::Base.logger = nil
+    $debugging = false
   end
   
 end

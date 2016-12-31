@@ -48,38 +48,69 @@ class HasManyTest < ActiveSupport::TestCase
       Organization.create(accounts: [account])
     end
     
+    # Memory
+    assert_equal time.to_i, account.organization_cached_at.to_i
+    
+    # DB
     assert_equal time.to_i, account.reload.organization_cached_at.to_i
   end
   
-  test "::update" do
-    org = Organization.create
-    account = Account.create(organization: org)
+  test "::update attributes" do
+    account = Account.create
+    org = Organization.create(accounts: [account])
 
     time = Time.now + 60
     travel_to(time) { org.update(name: 'new name') }
-
+    
+    # Memory
+    assert_equal time.to_i, account.organization_cached_at.to_i
+    
+    # DB
     assert_equal time.to_i, account.reload.organization_cached_at.to_i
   end
   
-  test "::touch" do
-    org = Organization.create
-    account = Account.create(organization: org)
+  test "::update association" do
+    account1 = Account.create
+    account2 = Account.create
+    org = Organization.create(accounts: [account1])
 
     time = Time.now + 60
-    debug do
-    travel_to(time) { org.touch }
+    travel_to(time) { org.update(accounts: [account2]) }
+    
+    # Memory
+    assert_equal time.to_i, account1.organization_cached_at.to_i
+    assert_equal time.to_i, account2.organization_cached_at.to_i
+    
+    # DB
+    assert_equal time.to_i, account1.reload.organization_cached_at.to_i
+    assert_equal time.to_i, account2.reload.organization_cached_at.to_i
   end
+  
+  test "::touch" do
+    account = Account.create
+    org = Organization.create(accounts: [account])
 
+    time = Time.now + 60
+    travel_to(time) { org.touch }
+
+    # Memory
+    assert_equal time.to_i, account.organization_cached_at.to_i
+    
+    # DB
     assert_equal time.to_i, account.reload.organization_cached_at.to_i
   end
 
   test "::destroy" do
-    org = Organization.create
-    account = Account.create(organization: org)
+    account = Account.create
+    org = Organization.create(accounts: [account])
 
     time = Time.now + 60
     travel_to(time) { org.destroy }
 
+    # Memory
+    assert_equal time.to_i, account.organization_cached_at.to_i
+    
+    # DB
     assert_equal time.to_i, account.reload.organization_cached_at.to_i
   end
   
@@ -87,12 +118,16 @@ class HasManyTest < ActiveSupport::TestCase
   test "::destroy dependent: :delete"
   
   test "::destroy dependent: :nullify" do
-    account = Account.create
-    photos = [Photo.create(account: account), Photo.create(account: account)]
+    photos = [Photo.create, Photo.create]
+    account = Account.create(photos: photos)
 
     time = Time.now + 60
     travel_to(time) { account.destroy }
 
+    # Memory
+    assert_equal [time.to_i, time.to_i], photos.map{ |p| p.account_cached_at.to_i }
+    
+    # DB
     assert_equal [time.to_i, time.to_i], photos.map{ |p| p.reload.account_cached_at.to_i }
   end
 

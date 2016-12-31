@@ -30,6 +30,10 @@ class HasOneTest < ActiveSupport::TestCase
       Account.create(email: email)
     end
     
+    # Memory
+    assert_equal time.to_i, email.account_cached_at.to_i
+    
+    # DB
     assert_equal time.to_i, email.reload.account_cached_at.to_i
   end
   
@@ -40,6 +44,10 @@ class HasOneTest < ActiveSupport::TestCase
     time = Time.now + 60
     travel_to(time) { account.update(name: 'new name') }
 
+    # Memory
+    assert_equal time.to_i, email.account_cached_at.to_i
+    
+    # DB
     assert_equal time.to_i, email.reload.account_cached_at.to_i
   end
 
@@ -50,6 +58,10 @@ class HasOneTest < ActiveSupport::TestCase
     time = Time.now + 60
     travel_to(time) { account.destroy }
 
+    # Memory
+    assert_equal time.to_i, email.account_cached_at.to_i
+    
+    # DB
     assert_equal time.to_i, email.reload.account_cached_at.to_i
   end
 

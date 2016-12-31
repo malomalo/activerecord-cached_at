@@ -3,12 +3,21 @@ require 'active_record'
 
 require File.expand_path(File.join(__FILE__, '../../../ext/active_record/timestamp'))
 
-require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/reflection/abstract_reflection'))
-require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/reflection/belongs_to_reflection'))
-require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/reflection/has_and_belongs_to_many_reflection'))
-require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/reflection/has_many_reflection'))
-require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/reflection/has_one_reflection'))
-require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/reflection/through_reflection'))
+#   Association
+#     SingularAssociation
+#       HasOneAssociation + ForeignAssociation
+#         HasOneThroughAssociation + ThroughAssociation
+#       BelongsToAssociation
+#         BelongsToPolymorphicAssociation
+#     CollectionAssociation
+#       HasManyAssociation + ForeignAssociation
+#         HasManyThroughAssociation + ThroughAssociation
+require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/association'))
+require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/has_one_association'))
+require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/belongs_to_association'))
+require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/collection_association'))
+require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/has_many_through_association'))
+
 
 require File.expand_path(File.join(__FILE__, '../../../ext/active_record/associations/has_many_association'))
 require File.expand_path(File.join(__FILE__, '../../../ext/active_record/connection_adapters/abstract/schema_definitions'))
@@ -38,7 +47,6 @@ module ActiveRecord
 
       after_save     :update_relations_cached_at_from_cached_at
 
-
       after_commit      :cleanup
       after_rollback    :cleanup
     end
@@ -64,20 +72,8 @@ module ActiveRecord
       timestamp ||= current_time_from_proper_timezone
       Thread.current[:cached_at_timestamp] = timestamp if method == :destroy
 
-      self.class.reflect_on_all_associations.each do |reflection|
-        # puts [self.class.name, reflection.name, reflection.class.name].inspect
-        case reflection
-        when ActiveRecord::Reflection::BelongsToReflection
-          reflection.touch_cached_at(self, timestamp)
-        when ActiveRecord::Reflection::HasManyReflection
-          reflection.touch_cached_at(self, timestamp)
-        when ActiveRecord::Reflection::HasOneReflection
-          reflection.touch_cached_at(self, timestamp)
-        when ActiveRecord::Reflection::HasAndBelongsToManyReflection
-          reflection.touch_cached_at(self, timestamp)
-        when ActiveRecord::Reflection::ThroughReflection
-          reflection.touch_cached_at(self, timestamp)
-        end
+      self._reflections.each do |name, reflection|
+        association(name.to_sym).touch_cached_at(timestamp)
       end
     end
 
@@ -92,27 +88,6 @@ module ActiveRecord
           elsif (self.changes[reflection.foreign_key] || self.new_record? || (self.association(reflection.name).loaded? && self.send(reflection.name) && self.send(reflection.name).id.nil?)) && self.send(reflection.name).try(:cached_at)
             self.assign_attributes({ cache_column => self.send(reflection.name).cached_at })
           end
-          
-          # if self.send("#{assoc.name}_id_was") && self.send("#{assoc.name}_id_was") != self.send("#{assoc.name}_id")
-          #   assoc_klass = if assoc.options[:polymorphic]
-          #     self.send("#{assoc.name}_type_was").constantize
-          #   else
-          #     assoc.klass
-          #   end
-          #
-          #           other_id = assoc_klass.find(self.send("#{assoc.name}_id_was"))
-          #
-          #           inverse_assoc = if assoc.options[:polymorphic]
-          #             assoc_klass.reflect_on_association(assoc.options[:inverse_of])
-          #           else
-          #             assoc.inverse_of
-          #           end
-          #           inverse_assoc.options[:cached_at_updates].try(:call, other_id, timestamp)
-          #         end
-          #         if self.send(assoc.name)
-          #           @_update_belongs_to ||= []
-          #           @_update_belongs_to << assoc
-          #         end
 
         end
       end
