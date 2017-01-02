@@ -22,6 +22,10 @@ module ActiveRecord::CachedAt
       when :delete, :nullify
         traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
       end
+      
+      if loaded? && target
+        target.raw_write_attribute(cache_column, timestamp)
+      end
     end
     
   end
