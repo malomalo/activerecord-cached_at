@@ -66,6 +66,23 @@ class PolymorphicBelongsToTest < ActiveSupport::TestCase
 
   test "::update changing relationship" do
     olditem = Organization.create
+    newitem = Organization.create
+    image = Image.create(item: olditem)
+    time = Time.now + 60
+    
+    travel_to(time) { image.update(item: newitem) }
+    
+    # Memory
+    assert_equal time.to_i, newitem.images_cached_at.to_i
+    assert_equal time.to_i, olditem.images_cached_at.to_i
+
+    # DB
+    assert_equal time.to_i, newitem.reload.images_cached_at.to_i
+    assert_equal time.to_i, olditem.reload.images_cached_at.to_i
+  end
+  
+  test "::update changing relationship to a different model" do
+    olditem = Organization.create
     newitem = Account.create
     image = Image.create(item: olditem)
     time = Time.now + 60
