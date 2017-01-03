@@ -43,7 +43,7 @@ module ActiveRecord::CachedAt
     end
     
     def touch_records_added_cached_at(records, timestamp)
-      return if owner.new_record? || records.empty?
+      return if records.empty?
 
       using_reflection = reflection.parent_reflection || reflection
       
@@ -67,23 +67,6 @@ module ActiveRecord::CachedAt
       end
     end
     
-    # def concat_records(records)
-    #   value = super
-    #   touch_records_added_cached_at(records, Time.now)
-    #   value
-    # end
-    #
-    # def remove_records(existing_records, records, method)
-    #   touch_records_added_cached_at(existing_records, Time.now)
-    #   super
-    # end
-    #
-    # def delete_all(dependent = nil)
-    #   touch_cached_at(Time.now)
-    #   super
-    # end
-
-  
   end
 end
 

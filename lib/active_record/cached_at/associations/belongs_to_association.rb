@@ -13,10 +13,10 @@ module ActiveRecord::CachedAt
 
       cache_column = "#{options[:inverse_of]}_cached_at"
       if options[:polymorphic]
-        oldtype = owner.send("#{foreign_type}_was")
-        oldid = owner.send("#{foreign_key}_was")
-        newtype = owner.send(foreign_type)
-        newid = owner.send(foreign_key)
+        oldtype = owner.send("#{reflection.foreign_type}_was")
+        oldid = owner.send("#{reflection.foreign_key}_was")
+        newtype = owner.send(reflection.foreign_type)
+        newid = owner.send(reflection.foreign_key)
         if !oldtype.nil? && oldtype == newtype
           model_klass = oldtype.constantize
           query = model_klass.where({ (options[:primary_key] || 'id') => [oldid, newid] })
@@ -41,7 +41,6 @@ module ActiveRecord::CachedAt
         ids = [owner.send(reflection.foreign_key), owner.send("#{reflection.foreign_key}_was")].compact.uniq
         query = klass.where({ reflection.association_primary_key => ids })
         query.update_all({ cache_column => timestamp })
-
         traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
       end
       

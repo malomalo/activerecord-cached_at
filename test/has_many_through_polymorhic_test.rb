@@ -1,15 +1,21 @@
 require 'test_helper'
 
-class HasManyThroughTest < ActiveSupport::TestCase
+class HasManyThroughPolymorhicTest < ActiveSupport::TestCase
 
   schema do
     create_table "ships" do |t|
       t.string   "name",                 limit: 255
       t.datetime 'images_cached_at',      null: false
     end
+    
+    create_table "buildings" do |t|
+      t.string   "name",                 limit: 255
+      t.datetime 'images_cached_at',      null: false
+    end
 
-    create_table "image_orderings", force: :cascade do |t|
-      t.integer "ship_id",   null: false
+    create_table "ownerships", force: :cascade do |t|
+      t.integer "subject_id",   null: false
+      t.string  "subject_type", null: false
       t.integer "image_id",     null: false
     end
 
@@ -19,18 +25,19 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
 
   class Ship < ActiveRecord::Base
-    has_many :image_orderings, dependent: :destroy
-    has_many :images, through: :image_orderings, source: :image, inverse_of: :ships
+    has_many :ownerships, as: :subject, dependent: :destroy
+    has_many :images, through: :ownerships, source: :image, inverse_of: :ships
+
   end
 
-  class ImageOrdering < ActiveRecord::Base
-    belongs_to :ship, class_name: 'HasManyThroughTest::Ship'
+  class Ownership < ActiveRecord::Base
+    belongs_to :subject, polymorphic: true, inverse_of: :ownerships
     belongs_to :image
   end
 
   class Image < ActiveRecord::Base
-    has_many :image_orderings, dependent: :destroy
-    has_many :ships, through: :image_orderings, inverse_of: :images, cached_at: true
+    has_many :ownerships, dependent: :destroy
+    has_many :ships, through: :ownerships, inverse_of: :images, source: :subject, source_type: 'HasManyThroughPolymorhicTest::Ship', cached_at: true
     # cache_relation :photos, ->(record) { Ship.join(:image_ordergins).where('imageorderings.id = ?', record.id) }
   end
 
@@ -77,7 +84,7 @@ class HasManyThroughTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) { ship.images << image }
-  
+
     assert_equal time.to_i, ship.reload.images_cached_at.to_i
     # assert_equal time.to_i, image.reload.ships_cached_at.to_i
   end
