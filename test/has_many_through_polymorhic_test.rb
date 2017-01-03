@@ -27,7 +27,6 @@ class HasManyThroughPolymorhicTest < ActiveSupport::TestCase
   class Ship < ActiveRecord::Base
     has_many :ownerships, as: :subject, dependent: :destroy
     has_many :images, through: :ownerships, source: :image, inverse_of: :ships
-
   end
 
   class Ownership < ActiveRecord::Base
