@@ -10,7 +10,7 @@ module ActiveRecord::CachedAt
         updates = {reflection.foreign_key => nil}
         if reflection.options[:cached_at]
           cache_column = "#{reflection.inverse_of.name}_cached_at"
-          updates[cache_column] = Thread.current[:cached_at_timestamp] || Time.now
+          updates[cache_column] = Time.now
         end
         scope.update_all(updates)
       end

@@ -12,13 +12,24 @@ class HasOneTest < ActiveSupport::TestCase
       t.integer  "account_id"
       t.datetime 'account_cached_at',      null: false
     end
+    
+    create_table "avatars", force: :cascade do |t|
+      t.string "title"
+      t.integer  "account_id"
+      t.datetime 'account_cached_at',      null: false
+    end
   end
   
   class Account < ActiveRecord::Base
     has_one :email, cached_at: true, inverse_of: :account
+    has_one :avatar, cached_at: true, inverse_of: :account, dependent: :nullify
   end
 
   class Email < ActiveRecord::Base
+    belongs_to :account
+  end
+  
+  class Avatar < ActiveRecord::Base
     belongs_to :account
   end
 
@@ -64,9 +75,19 @@ class HasOneTest < ActiveSupport::TestCase
     # DB
     assert_equal time.to_i, email.reload.account_cached_at.to_i
   end
+  
+  test "::destroy dependent: :nullify" do
+    account = Account.create
+    avatar = Avatar.create(account: account)
 
-  test "::destroy dependent: :destroy"
-  test "::destroy dependent: :delete"
-  test "::destroy dependent: :nullify"
+    time = Time.now + 60
+    travel_to(time) { account.destroy }
+  
+    # Memory
+    assert_equal time.to_i, avatar.account_cached_at.to_i
+    
+    # DB
+    assert_equal time.to_i, avatar.reload.account_cached_at.to_i
+  end
   
 end

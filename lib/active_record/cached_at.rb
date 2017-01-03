@@ -45,9 +45,6 @@ module ActiveRecord
       after_touch       { update_relations_cached_at_from_cached_at(method: :touch) }
 
       after_save     :update_relations_cached_at_from_cached_at
-
-      after_commit      :cleanup
-      after_rollback    :cleanup
     end
     
     class_methods do
@@ -125,10 +122,6 @@ module ActiveRecord
 
       paramaterized_cache_key
     end
-      
-    def cleanup
-      Thread.current[:cached_at_timestamp] = nil
-    end
     
     def update_relations_cached_at_from_cached_at(method: nil)
       update_relations_cached_at({
@@ -140,7 +133,6 @@ module ActiveRecord
     def update_relations_cached_at(timestamp: nil, method: nil)
       return if (method == nil && changes.empty?) && method != :destroy && method != :touch
       timestamp ||= current_time_from_proper_timezone
-      Thread.current[:cached_at_timestamp] = timestamp if method == :destroy
 
       self._reflections.each do |name, reflection|
         association(name.to_sym).touch_cached_at(timestamp)
