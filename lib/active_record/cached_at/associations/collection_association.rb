@@ -22,7 +22,6 @@ module ActiveRecord::CachedAt
         query.update_all({ cache_column => timestamp })
         traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
       when :destroy
-        query.update_all({ cache_column => timestamp })
         traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
         # shouldn't need to to worry about :destroy, that will touch the other caches on destroy
       when :delete_all, :nullify
