@@ -79,7 +79,7 @@ module ActiveRecord::CachedAt
     end
 
     def delete_all(dependent = nil)
-      touch_cached_at(Time.now, :destroy) unless self.class == ActiveRecord::Associations::HasManyThroughAssociation
+      touch_cached_at(Time.now, :destroy)
       super
     end
     
