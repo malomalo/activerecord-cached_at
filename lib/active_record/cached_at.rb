@@ -16,7 +16,7 @@ require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/asso
 require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/has_one_association'))
 require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/belongs_to_association'))
 require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/collection_association'))
-require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/has_many_association'))
+# require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/has_many_association'))
 require File.expand_path(File.join(__FILE__, '../../active_record/cached_at/associations/has_many_through_association'))
 
 

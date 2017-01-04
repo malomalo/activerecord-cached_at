@@ -33,11 +33,7 @@ class BelongsToTest < ActiveSupport::TestCase
       Account.create(organization: org)
     end
 
-    # Memory
-    assert_equal time.to_i, org.accounts_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, org.reload.accounts_cached_at.to_i
+    assert_in_memory_and_persisted(org, :accounts_cached_at, time)
   end
   
   test "::update" do
@@ -47,11 +43,7 @@ class BelongsToTest < ActiveSupport::TestCase
     
     travel_to(time) { account.update(name: 'new name') }
 
-    # Memory
-    assert_equal time.to_i, org.accounts_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, org.reload.accounts_cached_at.to_i
+    assert_in_memory_and_persisted(org, :accounts_cached_at, time)
   end
   
   test "::update changing relationship" do
@@ -62,13 +54,8 @@ class BelongsToTest < ActiveSupport::TestCase
     
     travel_to(time) { account.update(organization: neworg) }
 
-    # Memory
-    assert_equal time.to_i, neworg.accounts_cached_at.to_i
-    assert_equal time.to_i, oldorg.accounts_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, neworg.reload.accounts_cached_at.to_i
-    assert_equal time.to_i, oldorg.reload.accounts_cached_at.to_i
+    assert_in_memory_and_persisted(neworg, :accounts_cached_at, time)
+    assert_in_memory_and_persisted(oldorg, :accounts_cached_at, time)
   end
   
   test "::destroy" do
@@ -78,11 +65,7 @@ class BelongsToTest < ActiveSupport::TestCase
     
     travel_to(time) { account.destroy }
 
-    # Memory
-    assert_equal time.to_i, org.accounts_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, org.reload.accounts_cached_at.to_i
+    assert_in_memory_and_persisted(org, :accounts_cached_at, time)
   end
   
   test ".relationship = nil" do
@@ -91,14 +74,8 @@ class BelongsToTest < ActiveSupport::TestCase
     time = Time.now + 60
     
     travel_to(time) { account.update(organization: nil) }
-    
-    # Memory
-    assert_equal time.to_i, org.accounts_cached_at.to_i
-    assert_equal time.to_i, account.organization_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, org.reload.accounts_cached_at.to_i
-    assert_equal time.to_i, account.reload.organization_cached_at.to_i
+
+    assert_in_memory_and_persisted(org, :accounts_cached_at, time)
   end
   
 end
