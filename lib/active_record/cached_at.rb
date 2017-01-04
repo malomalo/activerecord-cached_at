@@ -135,7 +135,7 @@ module ActiveRecord
       timestamp ||= current_time_from_proper_timezone
 
       self._reflections.each do |name, reflection|
-        association(name.to_sym).touch_cached_at(timestamp)
+        association(name.to_sym).touch_cached_at(timestamp, method)
       end
     end
 

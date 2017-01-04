@@ -1,7 +1,7 @@
 module ActiveRecord::CachedAt
   module BelongsToAssociation
   
-    def touch_cached_at(timestamp)
+    def touch_cached_at(timestamp, method)
       return unless options[:cached_at]
 
       if !options[:inverse_of]

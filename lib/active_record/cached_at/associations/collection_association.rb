@@ -1,7 +1,7 @@
 module ActiveRecord::CachedAt
   module CollectionAssociation
   
-    def touch_cached_at(timestamp)
+    def touch_cached_at(timestamp, method)
       return unless options[:cached_at]
 
       if reflection.inverse_of.nil?
@@ -16,16 +16,17 @@ module ActiveRecord::CachedAt
       if loaded?
         target.each { |r| r.raw_write_attribute(cache_column, timestamp) }
       end
-    
-      case options[:dependent]
-      when nil
+      
+      if method != :destroy
         query.update_all({ cache_column => timestamp })
         traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
-      when :destroy
-        traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
-        # shouldn't need to to worry about :destroy, that will touch the other caches on destroy
-      when :delete_all, :nullify
-        traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
+      else
+        if options[:dependent].nil?
+          query.update_all({ cache_column => timestamp })
+          traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
+        else
+          traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
+        end
       end
     end
     
@@ -48,11 +49,22 @@ module ActiveRecord::CachedAt
         query.update_all({ cache_column => timestamp })
         traverse_relationships(klass, reflection.options[:cached_at], query, cache_column, timestamp)
       end
+    end
+    
+    def touch_records_removed_cached_at(records, timestamp)
+      return if owner.new_record? || records.empty?
       
-      # if using_reflection.inverse_of&.options.try(:[], :cached_at) || using_reflection.inverse_of&.parent_reflection&.options.try(:[], :cached_at)
-      #   cache_column = "#{using_reflection.name}_cached_at"
-      #   owner.update_column(cache_column, timestamp) unless owner.new_record?
-      # end
+      return unless options[:cached_at]
+
+      if reflection.inverse_of.nil?
+        puts "WARNING: cannot updated cached at for relationship: #{klass.name}.#{name}, inverse_of not set"
+        return
+      end
+        
+      cache_column = "#{reflection.inverse_of.name}_cached_at"
+      ids = records.inject([]) { |a, o| a += [o.send(klass.primary_key), o.send("#{klass.primary_key}_was")] }.compact.uniq
+      query = klass.where(klass.primary_key => ids)
+      traverse_relationships(klass, reflection.options[:cached_at], query, cache_column, timestamp)
     end
     
     def concat_records(records, should_raise = false)
@@ -62,12 +74,12 @@ module ActiveRecord::CachedAt
     end
 
     def remove_records(existing_records, records, method)
-      touch_records_added_cached_at(existing_records, Time.now)
+      touch_records_removed_cached_at(existing_records, Time.now)
       super
     end
 
     def delete_all(dependent = nil)
-      touch_cached_at(Time.now)
+      touch_cached_at(Time.now, :destroy) unless self.class == ActiveRecord::Associations::HasManyThroughAssociation
       super
     end
     

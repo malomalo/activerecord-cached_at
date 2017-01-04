@@ -52,6 +52,11 @@ class ActiveSupport::TestCase
     @suite_setup_run = true
   end
   
+  def assert_in_memory_and_persisted(record, column, time)
+    assert_equal time.to_i, record.send(column).to_i, "#{record.class.name}##{record.id}.#{column} no updated in memory"
+    assert_equal time.to_i, record.reload.send(column).to_i, "#{record.class.name}##{record.id}.#{column} no updated in database"
+  end
+  
   def debug
     ActiveRecord::Base.logger = Logger.new(STDOUT)
     $debugging = true

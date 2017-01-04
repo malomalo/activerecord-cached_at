@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class HasManyTest < ActiveSupport::TestCase
+class HasManyDependentDeleteAllTest < ActiveSupport::TestCase
 
   schema do
     create_table "organizations", force: :cascade do |t|
@@ -14,11 +14,10 @@ class HasManyTest < ActiveSupport::TestCase
       t.integer  "organization_id"
       t.datetime 'organization_cached_at',  null: false
     end
-
   end
 
   class Organization < ActiveRecord::Base
-    has_many :accounts, cached_at: true, inverse_of: :organization
+    has_many :accounts, dependent: :delete_all, cached_at: true, inverse_of: :organization
   end
 
   class Account < ActiveRecord::Base
@@ -53,8 +52,8 @@ class HasManyTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) { org.update(accounts: [account2]) }
-    
-    assert_nil account1.reload.organization_id
+
+    assert_equal 0, Account.where(id: account1.id).count
     assert_in_memory_and_persisted(account2, :organization_cached_at, time)
   end
   
@@ -74,9 +73,8 @@ class HasManyTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) { org.destroy }
-    
 
-    assert_in_memory_and_persisted(account, :organization_cached_at, time)
+    assert_equal 0, Account.where(id: account.id).count
   end
-  
+
 end

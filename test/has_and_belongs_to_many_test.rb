@@ -86,7 +86,7 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) { email.email_messages = [message] }
-    
+
     assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
   end
 
@@ -107,7 +107,9 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
     message = EmailMessage.create(emails: [email1, email2])
 
     time = Time.now + 60
-    travel_to(time) { message.emails = [email2] }
+    travel_to(time) {
+      message.emails = [email2]
+    }
 
     assert_equal time.to_i, email1.reload.email_messages_cached_at.to_i
     # assert_equal time.to_i, email2.reload.email_messages_cached_at.to_i
@@ -119,7 +121,7 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) { message.emails.clear }
-    
+
     assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
   end
 

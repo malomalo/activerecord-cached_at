@@ -1,7 +1,7 @@
 module ActiveRecord::CachedAt
   module HasOneAssociation
   
-    def touch_cached_at(timestamp)
+    def touch_cached_at(timestamp, method)
       return unless options[:cached_at]
       
       if reflection.inverse_of.nil?
