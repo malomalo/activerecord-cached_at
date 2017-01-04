@@ -2,6 +2,25 @@ require 'test_helper'
 
 class CachedAtTest < ActiveSupport::TestCase
 
+  schema do
+    create_table "accounts", force: :cascade do |t|
+      t.string   "name",                    limit: 255
+      t.datetime 'cached_at',               null: false
+      t.integer  "organization_id"
+      t.datetime 'organization_cached_at',  null: false
+      t.datetime 'organization_images_cached_at',  null: false
+    end
+    
+    create_table "regions", force: :cascade do |t|
+    end
+  end
+  
+  class Account < ActiveRecord::Base
+  end
+  
+  class Region < ActiveRecord::Base
+  end
+  
   test "::create" do
     time = Time.now
     model = travel_to(time) do
@@ -29,36 +48,33 @@ class CachedAtTest < ActiveSupport::TestCase
     assert_equal time.to_i, model.cached_at.to_i
   end
 
-  test 'Migration timestamps' do
-    ActiveRecord::Migration.suppress_messages do
-      ActiveRecord::Migration.create_table(:mountains) do |t|
-        t.timestamps
-      end
-    end
-    
-    Mountain.reset_column_information
-    assert_equal ["id", "created_at", "updated_at", "cached_at"], Mountain.column_names
-    
-    ActiveRecord::Migration.suppress_messages do
-      ActiveRecord::Migration.drop_table(:mountains)
-    end
+  test "::cached_at_columns_for_includes" do
+    assert_equal ['organization_cached_at'], Account.cached_at_columns_for_includes([:organization])
+    assert_equal ['organization_cached_at', 'region_cached_at'], Account.cached_at_columns_for_includes([:organization, :region])
+
+    assert_equal ['organization_cached_at', 'organization_images_cached_at', 'region_cached_at'], Account.cached_at_columns_for_includes({organization: [:images], region: true}).sort
   end
-    
-  test 'Migration add_timestamps' do
-    ActiveRecord::Migration.suppress_messages do
-      ActiveRecord::Migration.create_table :mountains
-      ActiveRecord::Migration.add_timestamps(:mountains, {null: true})
-    end
-    
-    Mountain.reset_column_information
-    assert_equal ["id", "created_at", "updated_at", "cached_at"], Mountain.column_names
-    
-    ActiveRecord::Migration.suppress_messages do
-      ActiveRecord::Migration.remove_timestamps(:mountains)
-      ActiveRecord::Migration.drop_table(:mountains)
-    end
+
+  test "::can_cache?" do
+    assert Account.can_cache?([])
+    assert Account.can_cache?([:organization])
+    assert Account.can_cache?({organization: true})
+    refute Account.can_cache?([:organization, :region])
+    refute Account.can_cache?({organization: [:images], region: true})
   end
-  
+
+  test "#cache_key" do
+    t1 = Time.now
+    t2 = Time.now + 10
+    t3 = Time.now + 20
+    account = Account.create(cached_at: t1, organization_cached_at: t2, organization_images_cached_at: t3)
+
+    assert_equal "cached_at_test/accounts/#{account.id}-#{t1.utc.to_s(:usec)}", account.cache_key
+    assert_equal "cached_at_test/accounts/#{account.id}+b4c1948c087fafc89a88450fcbb64c77@#{t2.utc.to_s(:usec)}", account.cache_key(:organization)
+    assert_equal "cached_at_test/accounts/#{account.id}+b471431f7777fe57283f68842e724add@#{t3.utc.to_s(:usec)}", account.cache_key(organization: :images)
+    assert_equal "cached_at_test/accounts/#{account.id}+b471431f7777fe57283f68842e724add@#{t3.utc.to_s(:usec)}", account.cache_key([organization: [:images]])
+  end
+
   # test 'counter caches' do
   #   t1 = 1.week.ago
   #   t2 = Time.now
