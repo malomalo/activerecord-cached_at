@@ -1,4 +1,4 @@
-module ActiveRecord::CachedAt
+module CachedAt
   module Association
     
     def traverse_relationships(klass, relationships, query, cache_column, timestamp)
@@ -38,4 +38,4 @@ module ActiveRecord::CachedAt
   end
 end
 
-ActiveRecord::Associations::Association.include(ActiveRecord::CachedAt::Association)
+ActiveRecord::Associations::Association.include(CachedAt::Association)

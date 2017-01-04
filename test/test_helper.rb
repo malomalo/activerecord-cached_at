@@ -1,3 +1,4 @@
+require 'byebug'
 require 'simplecov'
 SimpleCov.start do
   add_filter '/test/'
@@ -10,7 +11,7 @@ $LOAD_PATH << File.expand_path('../lib', __FILE__)
 require "minitest/autorun"
 require 'minitest/unit'
 require 'minitest/reporters'
-require 'active_record/cached_at'
+require 'cached_at'
 
 # Setup the test db
 ActiveSupport.test_order = :random

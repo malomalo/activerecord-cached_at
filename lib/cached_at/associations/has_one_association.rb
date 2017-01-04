@@ -1,4 +1,4 @@
-module ActiveRecord::CachedAt
+module CachedAt
   module HasOneAssociation
   
     def touch_cached_at(timestamp, method)
@@ -49,4 +49,4 @@ module ActiveRecord::CachedAt
   end
 end
 
-ActiveRecord::Associations::HasOneAssociation.prepend(ActiveRecord::CachedAt::HasOneAssociation)
+ActiveRecord::Associations::HasOneAssociation.prepend(CachedAt::HasOneAssociation)

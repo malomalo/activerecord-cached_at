@@ -1,4 +1,4 @@
-module ActiveRecord::CachedAt
+module CachedAt
   module CollectionAssociation
   
     def touch_cached_at(timestamp, method)
@@ -86,4 +86,4 @@ module ActiveRecord::CachedAt
   end
 end
 
-ActiveRecord::Associations::CollectionAssociation.prepend(ActiveRecord::CachedAt::CollectionAssociation)
+ActiveRecord::Associations::CollectionAssociation.prepend(CachedAt::CollectionAssociation)
