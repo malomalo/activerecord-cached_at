@@ -73,9 +73,9 @@ module ActiveRecord
 
     end
 
-    def cache_key_including(includes = nil)
+    def cache_key(includes = nil)
       if includes.nil? || includes.empty?
-        cache_key
+        super
       else
         timestamp_keys = ['cached_at'] + self.class.cached_at_columns_for_includes(includes)
         timestamp = max_updated_column_timestamp(timestamp_keys).utc.to_s(cache_timestamp_format)
@@ -84,8 +84,9 @@ module ActiveRecord
         "#{model_name.cache_key}/#{id}+#{digest.hexdigest}@#{timestamp}"
       end
     end
-    #
-    # def cache_key_for_association(association_name)
+
+    # TODO
+    # def association_cache_key(association_name, includes = nil)
     # end
     
     private
