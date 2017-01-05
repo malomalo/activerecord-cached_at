@@ -50,8 +50,7 @@ module CachedAt
                ActiveRecord::HasManyThroughSourceAssociationNotFoundError,
                ActiveRecord::HasManyThroughAssociationPointlessSourceTypeError,
                ActiveRecord::HasManyThroughAssociationPolymorphicSourceError,
-               ActiveRecord::HasOneThroughCantAssociateThroughCollection,
-               ActiveRecord::HasManyThroughOrderError
+               ActiveRecord::HasOneThroughCantAssociateThroughCollection
                # these error get raised if the reflection is invalid... so we'll
                # skip them. Should warn the user, but this casuse the Rails test
                # to fail....
