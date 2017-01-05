@@ -1,0 +1,42 @@
+language: ruby
+
+rvm:
+  - 2.3.3
+  - 2.4.0
+
+env:
+  - RAILS_VERSION=v5.0.0
+  - RAILS_VERSION=v5.0.1
+
+cache:
+  bundler: true
+  directories:
+    - /home/travis/.rvm/gems
+
+addons:
+  postgresql: "9.4"
+
+before_install:
+  - unset BUNDLE_GEMFILE
+
+install:
+  - git clone https://github.com/rails/rails.git ~/build/rails
+
+before_script:
+  - pushd ~/build/rails
+  - git checkout $RAILS_VERSION
+  - sed -i "/require 'support\/connection'/a \$LOAD_PATH.unshift\(File.expand_path\('~\/build\/malomalo\/activerecord-cached_at\/lib'\)\)\nrequire 'activerecord-cached_at'" ~/build/rails/activerecord/test/cases/helper.rb
+  - cat ~/build/rails/Gemfile
+  - "sed -i \"/group :db do/a gem 'activerecord-cached_at', path: File.expand_path\\('~\\/build\\/malomalo\\/activerecord-cached_at'\\)\" ~/build/rails/Gemfile"
+  - cat ~/build/rails/Gemfile
+  - bundle install --jobs=3 --retry=3
+  - createdb activerecord_unittest
+  - createdb activerecord_unittest2
+  - mysql -e "create database IF NOT EXISTS activerecord_unittest DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_unicode_ci;"
+  - mysql -e "create database IF NOT EXISTS activerecord_unittest2 DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_unicode_ci;"
+  - gem environment gempath
+  - popd
+  - bundle install --jobs=3 --retry=3
+  - gem environment gempath
+
+script: bundle exec rake test && cd ~/build/rails/activerecord && bundle exec rake test --verbose
