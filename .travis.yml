@@ -25,9 +25,9 @@ install:
 before_script:
   - pushd ~/build/rails
   - git checkout $RAILS_VERSION
-  - sed -i "/require 'support\/connection'/a \$LOAD_PATH.unshift\(File.expand_path\('~\/build\/malomalo\/activerecord-cached_at\/lib'\)\)\nrequire 'activerecord-cached_at'" ~/build/rails/activerecord/test/cases/helper.rb
+  - sed -i "/require 'support\/connection'/a \$LOAD_PATH.unshift\(File.expand_path\('~\/build\/malomalo\/activerecord-cached_at\/lib'\)\)\nrequire 'cached_at'" ~/build/rails/activerecord/test/cases/helper.rb
   - cat ~/build/rails/Gemfile
-  - "sed -i \"/group :db do/a gem 'activerecord-cached_at', path: File.expand_path\\('~\\/build\\/malomalo\\/activerecord-cached_at'\\)\" ~/build/rails/Gemfile"
+  - "sed -i \"/group :db do/a gem 'activerecord-cached_at', require: 'cached_at', path: File.expand_path\\('~\\/build\\/malomalo\\/activerecord-cached_at'\\)\" ~/build/rails/Gemfile"
   - cat ~/build/rails/Gemfile
   - bundle install --jobs=3 --retry=3
   - createdb activerecord_unittest
@@ -36,7 +36,7 @@ before_script:
   - mysql -e "create database IF NOT EXISTS activerecord_unittest2 DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_unicode_ci;"
   - gem environment gempath
   - popd
-  - bundle install --jobs=3 --retry=3 
+  - bundle install --jobs=3 --retry=3
   - gem environment gempath
 
 script: bundle exec rake test && cd ~/build/rails/activerecord && bundle exec rake test --verbose
