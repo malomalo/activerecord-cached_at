@@ -86,16 +86,10 @@ module CachedAt
         else
           using_reflection.inverse_of.klass._reflections[using_reflection.inverse_of.options[:through].to_s].klass.arel_table
         end
-        query = nil
-        if inverse_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
-          query = using_reflection.inverse_of.klass.joins(inverse_reflection.inverse_of.options[:through])
-          query = query.where(arel_table[inverse_reflection.foreign_key].in(ids))
-        else
-          query = using_reflection.inverse_of.klass.joins(using_reflection.inverse_of.options[:through])
-          query = query.where(arel_table[using_reflection.foreign_key].in(ids))
-        end
-        
+
+        query = using_reflection.inverse_of.klass.where(using_reflection.inverse_of.klass.primary_key => owner.id)
         query.update_all({ cache_column => timestamp })
+        puts "#{owner.class.name}.#{cache_column} = #{timestamp}"
         owner.raw_write_attribute(cache_column, timestamp)
         traverse_relationships(klass, reflection.options[:cached_at], query, cache_column, timestamp)
       end

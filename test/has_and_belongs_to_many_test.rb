@@ -159,7 +159,6 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
       assert_queries(2) { email.email_messages = [message2] }
     }
 
-    puts time1.to_i, time2.to_i
     assert_in_memory_and_persisted(email, :email_messages_cached_at, time2)
   end
 
