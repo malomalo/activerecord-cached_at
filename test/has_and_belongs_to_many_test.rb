@@ -34,10 +34,10 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     message = travel_to(time) do
-      EmailMessage.create(emails: [email])
+      assert_queries(3) { EmailMessage.create(emails: [email]) }
     end
 
-    assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
+    assert_in_memory_and_persisted(email, :email_messages_cached_at, time)
   end
 
   test "::update" do
@@ -45,9 +45,11 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
     message = EmailMessage.create(emails: [email])
 
     time = Time.now + 60
-    travel_to(time) { message.update(message: 'new name') }
-
-    assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
+    travel_to(time) do
+      assert_queries(2) { message.update(message: 'new name') }
+    end
+    
+    assert_in_memory_and_persisted(email, :email_messages_cached_at, time)
   end
 
   test "::destroy" do
@@ -55,9 +57,11 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
     message = EmailMessage.create(emails: [email])
 
     time = Time.now + 60
-    travel_to(time) { message.destroy }
-
-    assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
+    travel_to(time) do
+      assert_queries(3) { message.destroy }
+    end
+    
+    assert_in_memory_and_persisted(email, :email_messages_cached_at, time)
   end
 
   test "relationship <<" do
@@ -65,9 +69,11 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
     message = EmailMessage.create(emails: [])
 
     time = Time.now + 60
-    travel_to(time) { message.emails << email }
-
-    assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
+    travel_to(time) do
+      assert_queries(2) { message.emails << email }
+    end
+    
+    assert_in_memory_and_persisted(email, :email_messages_cached_at, time)
   end
 
   test "relationship = [...]" do
@@ -75,9 +81,11 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
     message = EmailMessage.create
 
     time = Time.now + 60
-    travel_to(time) { message.emails = [email] }
+    travel_to(time) do
+      assert_queries(3) { message.emails = [email] }
+    end
 
-    assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
+    assert_in_memory_and_persisted(email, :email_messages_cached_at, time)
   end
 
   test "inverse_relationship = [...]" do
@@ -85,34 +93,74 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
     message = EmailMessage.create
 
     time = Time.now + 60
-    travel_to(time) { email.email_messages = [message] }
+    travel_to(time) do
+      assert_queries(3) { email.email_messages = [message] }
+    end
 
-    assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
+    assert_in_memory_and_persisted(email, :email_messages_cached_at, time)
   end
 
   test "relationship model added via = [...]" do
     email1 = Email.create
     email2 = Email.create
-    message = EmailMessage.create(emails: [email1])
+    
+    time1 = Time.now
+    message = travel_to(time1) { EmailMessage.create(emails: [email1]) }
 
-    time = Time.now + 60
-    travel_to(time) { message.emails = [email1, email2] }
+    time2 = Time.now + 60
+    travel_to(time2) do
+      assert_queries(2) { message.emails = [email1, email2] }
+    end
+    
+    assert_in_memory_and_persisted(email1, :email_messages_cached_at, time1)
+    assert_in_memory_and_persisted(email2, :email_messages_cached_at, time2)
+  end
 
-    assert_equal time.to_i, email2.reload.email_messages_cached_at.to_i
+  test "inverse_relationship model added via = [...]" do
+    message1 = EmailMessage.create
+    message2 = EmailMessage.create
+    
+    time1 = Time.now
+    email = travel_to(time1) { Email.create(email_messages: [message1]) }
+
+    time2 = Time.now + 60
+    travel_to(time2) do
+      assert_queries(2) { email.email_messages = [message1, message2] }
+    end
+    
+    assert_in_memory_and_persisted(email, :email_messages_cached_at, time2)
   end
 
   test "relationship model removed via = [...]" do
     email1 = Email.create
     email2 = Email.create
-    message = EmailMessage.create(emails: [email1, email2])
+    
+    time1 = Time.now
+    message = travel_to(time1) { EmailMessage.create(emails: [email1, email2]) }
 
-    time = Time.now + 60
-    travel_to(time) {
-      message.emails = [email2]
+    time2 = Time.now + 60
+    travel_to(time2) {
+      assert_queries(2) { message.emails = [email2] }
     }
 
-    assert_equal time.to_i, email1.reload.email_messages_cached_at.to_i
-    # assert_equal time.to_i, email2.reload.email_messages_cached_at.to_i
+    assert_in_memory_and_persisted(email1, :email_messages_cached_at, time2)
+    assert_in_memory_and_persisted(email2, :email_messages_cached_at, time1)
+  end
+
+  test "inverse_relationship model removed via = [...]" do
+    message1 = EmailMessage.create
+    message2 = EmailMessage.create
+    
+    time1 = Time.now
+    email = travel_to(time1) { Email.create(email_messages: [message1, message2]) }
+    
+    time2 = Time.now + 60
+    travel_to(time2) {
+      assert_queries(2) { email.email_messages = [message2] }
+    }
+
+    puts time1.to_i, time2.to_i
+    assert_in_memory_and_persisted(email, :email_messages_cached_at, time2)
   end
 
   test "relationship.clear" do
@@ -120,9 +168,11 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
     message = EmailMessage.create(emails: [email])
 
     time = Time.now + 60
-    travel_to(time) { message.emails.clear }
+    travel_to(time) do
+      assert_queries(2) { message.emails.clear }
+    end
 
-    assert_equal time.to_i, email.reload.email_messages_cached_at.to_i
+    assert_in_memory_and_persisted(email, :email_messages_cached_at, time)
   end
 
 end

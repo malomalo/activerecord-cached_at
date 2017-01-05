@@ -31,7 +31,7 @@ module CachedAt
     end
     
     def touch_records_added_cached_at(records, timestamp)
-      return if records.empty?
+      return if owner.new_record? || records.empty?
 
       using_reflection = reflection.parent_reflection || reflection
 
@@ -45,6 +45,7 @@ module CachedAt
         cache_column = "#{using_reflection.inverse_of.name}_cached_at"
         ids = records.inject([]) { |a, o| a += [o.send(klass.primary_key), o.send("#{klass.primary_key}_was")] }.compact.uniq
         query = klass.where(klass.primary_key => ids)
+        records.each { |r| r.raw_write_attribute(cache_column, timestamp) }
         query.update_all({ cache_column => timestamp })
         traverse_relationships(klass, using_reflection.options[:cached_at], query, cache_column, timestamp)
       end
@@ -70,6 +71,7 @@ module CachedAt
         cache_column = "#{inverse_reflection.name}_cached_at"
         ids = records.inject([]) { |a, o| a += [o.send(klass.primary_key), o.send("#{klass.primary_key}_was")] }.compact.uniq
         query = klass.where(klass.primary_key => ids)
+        records.each { |r| r.raw_write_attribute(cache_column, timestamp) }
         query.update_all({ cache_column => timestamp })
         traverse_relationships(klass, reflection.options[:cached_at], query, cache_column, timestamp)
       end
@@ -78,20 +80,23 @@ module CachedAt
         cache_column = "#{using_reflection.name}_cached_at"
         owner.raw_write_attribute(cache_column, timestamp)
         ids = records.inject([]) { |a, o| a += [o.send(klass.primary_key), o.send("#{klass.primary_key}_was")] }.compact.uniq
-                
+        
         arel_table = if inverse_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
           inverse_reflection.klass.const_get(:"HABTM_#{using_reflection.name.to_s.camelize}").arel_table
         else
           using_reflection.inverse_of.klass._reflections[using_reflection.inverse_of.options[:through].to_s].klass.arel_table
         end
-        query = if inverse_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
-          using_reflection.inverse_of.klass.joins(inverse_reflection.join_table)
+        query = nil
+        if inverse_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
+          query = using_reflection.inverse_of.klass.joins(inverse_reflection.inverse_of.options[:through])
+          query = query.where(arel_table[inverse_reflection.foreign_key].in(ids))
         else
-          using_reflection.inverse_of.klass.joins(using_reflection.inverse_of.options[:through])
+          query = using_reflection.inverse_of.klass.joins(using_reflection.inverse_of.options[:through])
+          query = query.where(arel_table[using_reflection.foreign_key].in(ids))
         end
-
-        query.where(arel_table[using_reflection.inverse_of.foreign_key].in(ids))
+        
         query.update_all({ cache_column => timestamp })
+        owner.raw_write_attribute(cache_column, timestamp)
         traverse_relationships(klass, reflection.options[:cached_at], query, cache_column, timestamp)
       end
     end
