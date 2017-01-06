@@ -24,25 +24,27 @@ class CachedAtTest < ActiveSupport::TestCase
   test "::create" do
     time = Time.now
     model = travel_to(time) do
-      Account.create
+      assert_queries(1) { Account.create }
     end
     
     assert_equal time.to_i, model.cached_at.to_i
   end
   
   test "::create on model w/o cached_at" do
-    assert Region.create
+    assert_queries(1) do
+      assert Region.create
+    end
   end
   
   test "#update" do
     time = Time.now
     
     model = travel_to(1.week.ago) do
-      Account.create
+      assert_queries(1) { Account.create }
     end
     
     travel_to(time) do
-      model.update(:name => 'new')
+      assert_queries(1) { model.update(:name => 'new') }
     end
     
     assert_equal time.to_i, model.cached_at.to_i

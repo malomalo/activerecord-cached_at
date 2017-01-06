@@ -30,7 +30,7 @@ class BelongsToTest < ActiveSupport::TestCase
     time = Time.now + 60
     
     travel_to(time) do
-      Account.create(organization: org)
+      assert_queries(2) { Account.create(organization: org) }
     end
 
     assert_in_memory_and_persisted(org, :accounts_cached_at, time)
@@ -41,7 +41,9 @@ class BelongsToTest < ActiveSupport::TestCase
     account = Account.create(organization: org)
     time = Time.now + 60
     
-    travel_to(time) { account.update(name: 'new name') }
+    travel_to(time) do
+      assert_queries(2) { account.update(name: 'new name') }
+    end
 
     assert_in_memory_and_persisted(org, :accounts_cached_at, time)
   end
@@ -52,7 +54,9 @@ class BelongsToTest < ActiveSupport::TestCase
     account = Account.create(organization: oldorg)
     time = Time.now + 60
     
-    travel_to(time) { account.update(organization: neworg) }
+    travel_to(time) do
+      assert_queries(2) { account.update(organization: neworg) }
+    end
 
     assert_in_memory_and_persisted(neworg, :accounts_cached_at, time)
     assert_in_memory_and_persisted(oldorg, :accounts_cached_at, time)
@@ -63,7 +67,9 @@ class BelongsToTest < ActiveSupport::TestCase
     account = Account.create(organization: org)
     time = Time.now + 60
     
-    travel_to(time) { account.destroy }
+    travel_to(time) do
+      assert_queries(2) { account.destroy }
+    end
 
     assert_in_memory_and_persisted(org, :accounts_cached_at, time)
   end
@@ -73,7 +79,9 @@ class BelongsToTest < ActiveSupport::TestCase
     account = Account.create(organization: org)
     time = Time.now + 60
     
-    travel_to(time) { account.update(organization: nil) }
+    travel_to(time) do
+      assert_queries(2) { account.update(organization: nil) }
+    end
 
     assert_in_memory_and_persisted(org, :accounts_cached_at, time)
   end
