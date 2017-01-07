@@ -30,7 +30,7 @@ class HasManyTest < ActiveSupport::TestCase
     
     time = Time.now + 60
     org = travel_to(time) do
-      Organization.create(accounts: [account])
+      assert_queries(2) { Organization.create(accounts: [account]) }
     end
     
     assert_in_memory_and_persisted(account, :organization_cached_at, time)
@@ -41,7 +41,9 @@ class HasManyTest < ActiveSupport::TestCase
     org = Organization.create(accounts: [account])
 
     time = Time.now + 60
-    travel_to(time) { org.update(name: 'new name') }
+    travel_to(time) do
+      assert_queries(2) { org.update(name: 'new name') }
+    end
 
     assert_in_memory_and_persisted(account, :organization_cached_at, time)
   end
@@ -52,7 +54,9 @@ class HasManyTest < ActiveSupport::TestCase
     org = Organization.create(accounts: [account1])
 
     time = Time.now + 60
-    travel_to(time) { org.update(accounts: [account2]) }
+    travel_to(time) do
+      assert_queries(3) { org.update(accounts: [account2]) }
+    end
     
     assert_nil account1.reload.organization_id
     assert_in_memory_and_persisted(account2, :organization_cached_at, time)
@@ -63,7 +67,9 @@ class HasManyTest < ActiveSupport::TestCase
     org = Organization.create(accounts: [account])
 
     time = Time.now + 60
-    travel_to(time) { org.touch }
+    travel_to(time) do
+      assert_queries(2) { org.touch }
+    end
 
     assert_in_memory_and_persisted(account, :organization_cached_at, time)
   end
@@ -73,9 +79,10 @@ class HasManyTest < ActiveSupport::TestCase
     org = Organization.create(accounts: [account])
 
     time = Time.now + 60
-    travel_to(time) { org.destroy }
+    travel_to(time) do
+      assert_queries(2) { org.destroy }
+    end
     
-
     assert_in_memory_and_persisted(account, :organization_cached_at, time)
   end
   

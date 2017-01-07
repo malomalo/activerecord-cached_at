@@ -29,53 +29,38 @@ module CachedAt
         end
       end
     end
-    
-    def touch_records_added_cached_at(records, timestamp)
-      return if owner.new_record? || records.empty?
-      
-      if reflection.options[:cached_at]
-        if reflection.inverse_of.nil?
-          puts "WARNING: cannot updated cached at for relationship: #{klass.name}.#{name}, inverse_of not set"
-          return
-        end
-        
-        cache_column = "#{reflection.inverse_of.name}_cached_at"
-        if loaded?
-          target.each { |r| r.raw_write_attribute(cache_column, timestamp) }
-        end
-        
-        ids = records.inject([]) { |a, o| a += [o.send(klass.primary_key), o.send("#{klass.primary_key}_was")] }.compact.uniq
-        query = klass.where(klass.primary_key => ids)
-        query.update_all({ cache_column => timestamp })
-        traverse_relationships(klass, reflection.options[:cached_at], query, cache_column, timestamp)
-      end
-    end
-    
-    def touch_records_removed_cached_at(records, timestamp)
-      return if owner.new_record? || records.empty?
-      
+
+    def touch_records_cached_at(records, timestamp)
       return unless options[:cached_at]
 
       if reflection.inverse_of.nil?
-        puts "WARNING: cannot updated cached at for relationship: #{klass.name}.#{name}, inverse_of not set"
+        puts "WARNING: cannot updated cached at for relationship: #{owner.class.name}.#{name}, inverse_of not set"
         return
       end
-        
+
       cache_column = "#{reflection.inverse_of.name}_cached_at"
-      ids = records.inject([]) { |a, o| a += [o.send(klass.primary_key), o.send("#{klass.primary_key}_was")] }.compact.uniq
-      query = klass.where(klass.primary_key => ids)
-      traverse_relationships(klass, reflection.options[:cached_at], query, cache_column, timestamp)
-    end
-    
-    def concat_records(records, should_raise = false)
-      value = super
-      touch_records_added_cached_at(records, Time.now)
-      value
+
+      records.each { |r| r.raw_write_attribute(cache_column, timestamp) unless r.destroyed? }
+
+      query = klass.where({ klass.primary_key => records.map(&:id) })
+      query.update_all({ cache_column => timestamp })
+      traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
     end
 
-    def remove_records(existing_records, records, method)
-      touch_records_removed_cached_at(existing_records, Time.now)
-      super
+    def add_to_target(record, skip_callbacks = false, &block)
+      value = super
+      touch_records_cached_at([record], Time.now) if !(instance_variable_defined?(:@caching) && @caching)
+      value
+    end
+    
+    def replace_records(new_target, original_target)
+      @caching = true
+      changed_records = (target - new_target) | (new_target - target)
+      value = super
+      touch_records_cached_at(changed_records, Time.now) unless owner.new_record?
+      value
+    ensure
+      @caching = false
     end
 
     def delete_all(dependent = nil)
