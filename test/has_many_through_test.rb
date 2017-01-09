@@ -116,5 +116,20 @@ class HasManyThroughTest < ActiveSupport::TestCase
     
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
+  
+  test "removed from relationship by destroying through model" do
+    ship = Ship.create
+    image = Image.create
+    io = ImageOrdering.create(ship: ship, image: image)
+    
+    time = Time.now + 60
+    travel_to(time) do
+      debug do
+      assert_queries(2) { io.destroy }
+    end
+    end
+    
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
+  end
 
 end

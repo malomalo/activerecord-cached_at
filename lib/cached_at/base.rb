@@ -40,7 +40,7 @@ module CachedAt
           []
         else
           reflection.klass._reflections.values.select do |r|
-            r.options[:cached_at] && r.options[:through] == reflection.inverse_of&.name
+            r.options[:cached_at] && r.options[:through] && r.options[:through] == reflection.inverse_of&.name
           end
         end
 
