@@ -35,6 +35,20 @@ module CachedAt
       end
     end
     
+    def touch_through_reflections(reflections, timestamp)
+      reflections.each do |r|
+        cache_column = "#{r.inverse_of.name}_cached_at"
+        
+        source_assoc = owner.association(r.source_reflection_name.to_sym)
+        if source_assoc.loaded?
+          source_assoc.target.raw_write_attribute(cache_column, timestamp)
+        end
+        query = r.klass.where(r.association_primary_key => owner.send(r.foreign_key))
+        query.update_all({ cache_column => timestamp })
+        traverse_relationships(r.klass, r.options[:cached_at], query, cache_column, timestamp)
+      end
+    end
+    
   end
 end
 

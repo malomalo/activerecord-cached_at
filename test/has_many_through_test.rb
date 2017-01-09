@@ -124,9 +124,7 @@ class HasManyThroughTest < ActiveSupport::TestCase
     
     time = Time.now + 60
     travel_to(time) do
-      debug do
       assert_queries(2) { io.destroy }
-    end
     end
     
     assert_in_memory_and_persisted(ship, :images_cached_at, time)

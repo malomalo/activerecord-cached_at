@@ -51,21 +51,7 @@ module CachedAt
 
         assoc = association(name.to_sym)
         assoc.touch_cached_at(timestamp, method)
-        
-        through_connections.each do |r|
-          #TODO: move into association
-          cache_column = "#{r.inverse_of.name}_cached_at"
-          
-          r.klass.where(r.association_primary_key => self.send(r.foreign_key)).update_all({
-            cache_column => timestamp
-          })
-          
-          source_assoc = association(r.source_reflection_name.to_sym)
-          if source_assoc.loaded?
-            source_assoc.target.raw_write_attribute(cache_column, timestamp)
-          end
-        end
-        
+        assoc.touch_through_reflections(through_connections, timestamp)
       end
     end
 
