@@ -35,11 +35,37 @@ module CachedAt
       timestamp ||= current_time_from_proper_timezone
 
       self._reflections.each do |name, reflection|
-        next unless reflection.options[:cached_at] || reflection&.parent_reflection&.class == ActiveRecord::Reflection::HasAndBelongsToManyReflection
+
+        through_connections = if reflection.polymorphic?
+          []
+        else
+          reflection.klass._reflections.values.select do |r|
+            r.options[:cached_at] && r.options[:through] == reflection.inverse_of&.name
+          end
+        end
+
+        
+        next unless reflection.options[:cached_at] || reflection&.parent_reflection&.class == ActiveRecord::Reflection::HasAndBelongsToManyReflection || !through_connections.empty?
         next if instance_variable_defined?(:@relationships_cached_at_touched) && (!@relationships_cached_at_touched.nil? && @relationships_cached_at_touched[reflection.name])
         next if reflection.is_a?(ActiveRecord::Reflection::HasManyReflection) && method == :create
 
-        association(name.to_sym).touch_cached_at(timestamp, method)
+        assoc = association(name.to_sym)
+        assoc.touch_cached_at(timestamp, method)
+        
+        through_connections.each do |r|
+          #TODO: move into association
+          cache_column = "#{r.inverse_of.name}_cached_at"
+          
+          r.klass.where(r.association_primary_key => self.send(r.foreign_key)).update_all({
+            cache_column => timestamp
+          })
+          
+          source_assoc = association(r.source_reflection_name.to_sym)
+          if source_assoc.loaded?
+            source_assoc.target.raw_write_attribute(cache_column, timestamp)
+          end
+        end
+        
       end
     end
 

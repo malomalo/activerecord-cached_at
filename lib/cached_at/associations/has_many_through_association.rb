@@ -5,6 +5,8 @@ module CachedAt
       using_reflection = reflection.parent_reflection || reflection
       return unless using_reflection.options[:cached_at]
 
+      return if method == :create && !using_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
+
       if using_reflection.inverse_of.nil?
         puts "WARNING: cannot updated cached at for relationship: #{owner.class.name}.#{using_reflection.name}, inverse_of not set"
         return

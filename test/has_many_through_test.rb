@@ -6,9 +6,6 @@ class HasManyThroughTest < ActiveSupport::TestCase
     create_table "ships" do |t|
       t.string   "name",                 limit: 255
       t.datetime 'images_cached_at',      null: false
-      t.datetime 'missiles_cached_at',      null: false
-      t.datetime 'cannons_cached_at',      null: false
-      t.datetime 'planes_cached_at',      null: false
     end
 
     create_table "image_orderings", force: :cascade do |t|
@@ -19,33 +16,6 @@ class HasManyThroughTest < ActiveSupport::TestCase
     create_table "images", force: :cascade do |t|
       t.string  "title"
     end
-    
-    create_table "missile_orderings", force: :cascade do |t|
-      t.integer "ship_id",   null: false
-      t.integer "missile_id",     null: false
-    end
-
-    create_table "missiles", force: :cascade do |t|
-      t.string  "title"
-    end
-    
-    create_table "cannon_orderings", force: :cascade do |t|
-      t.integer "ship_id",   null: false
-      t.integer "cannon_id",     null: false
-    end
-
-    create_table "cannons", force: :cascade do |t|
-      t.string  "title"
-    end
-    
-    create_table "plane_orderings", force: :cascade do |t|
-      t.integer "ship_id"
-      t.integer "plane_id",   null: false
-    end
-
-    create_table "planes", force: :cascade do |t|
-      t.string  "title"
-    end
   end
 
   class Ship < ActiveRecord::Base
@@ -53,9 +23,10 @@ class HasManyThroughTest < ActiveSupport::TestCase
     has_many :images, through: :image_orderings, source: :image, inverse_of: :ships
   end
 
+  # TODO: make warning here when no inverse_of is present
   class ImageOrdering < ActiveRecord::Base
-    belongs_to :ship, class_name: 'HasManyThroughTest::Ship'
-    belongs_to :image
+    belongs_to :ship, inverse_of: :image_orderings
+    belongs_to :image, inverse_of: :image_orderings
   end
 
   class Image < ActiveRecord::Base
@@ -69,11 +40,10 @@ class HasManyThroughTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     image = travel_to(time) do
-      Image.create(ships: [ship])
+      assert_queries(3) { Image.create(ships: [ship]) }
     end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "::update" do
@@ -134,6 +104,17 @@ class HasManyThroughTest < ActiveSupport::TestCase
     assert_equal time.to_i, ship.reload.images_cached_at.to_i
     # assert_equal time.to_i, image.reload.ships_cached_at.to_i
   end
-
+  
+  test "added to relationship created with through model" do
+    ship = Ship.create
+    image = Image.create
+    
+    time = Time.now + 60
+    travel_to(time) do
+      assert_queries(2) { ImageOrdering.create(ship: ship, image: image) }
+    end
+    
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
+  end
 
 end

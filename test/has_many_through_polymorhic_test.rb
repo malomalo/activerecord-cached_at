@@ -31,7 +31,7 @@ class HasManyThroughPolymorhicTest < ActiveSupport::TestCase
 
   class Ownership < ActiveRecord::Base
     belongs_to :subject, polymorphic: true, inverse_of: :ownerships
-    belongs_to :image
+    belongs_to :image, inverse_of: :ownerships
   end
 
   class Image < ActiveRecord::Base

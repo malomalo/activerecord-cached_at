@@ -24,8 +24,8 @@ class HasManyThroughDependentDeleteAllTest < ActiveSupport::TestCase
   end
 
   class ImageOrdering < ActiveRecord::Base
-    belongs_to :ship#, class_name: 'HasManyThroughTest::Ship'
-    belongs_to :image
+    belongs_to :ship, inverse_of: :image_orderings
+    belongs_to :image, inverse_of: :image_orderings
   end
 
   class Image < ActiveRecord::Base
