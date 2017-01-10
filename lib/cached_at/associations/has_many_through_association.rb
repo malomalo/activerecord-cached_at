@@ -32,11 +32,11 @@ module CachedAt
         traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
       end
 
-      if using_reflection.inverse_of && using_reflection.inverse_of.options[:cached_at]
+      #TODO: test with new record (fails in mls)
+      if !owner.new_record? && using_reflection.inverse_of && using_reflection.inverse_of.options[:cached_at]
         cache_column = "#{using_reflection.name}_cached_at"
-        owner.raw_write_attribute(cache_column, timestamp) unless timestamp.nil?
-        #TODO: test with new record (fails in mls)
-        owner.update_columns(cache_column => timestamp) unless owner.new_record?
+        owner.raw_write_attribute(cache_column, timestamp)
+        owner.update_columns(cache_column => timestamp)
       end
     end
     
