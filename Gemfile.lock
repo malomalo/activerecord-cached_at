@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    activerecord-cached_at (2.0.6)
+    activerecord-cached_at (2.0.8)
       activerecord (~> 5.0.0)
 
 GEM

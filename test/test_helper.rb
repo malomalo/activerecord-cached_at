@@ -54,8 +54,8 @@ class ActiveSupport::TestCase
   end
   
   def assert_in_memory_and_persisted(record, column, time)
-    assert_equal time.to_i, record.send(column).to_i, "#{record.class.name}##{record.id}.#{column} not updated in memory"
-    assert_equal time.to_i, record.reload.send(column).to_i, "#{record.class.name}##{record.id}.#{column} not updated in database"
+    assert_equal time.to_i, record.send(column).to_i, "#{record.inspect}.#{column} not updated in memory"
+    assert_equal time.to_i, record.reload.send(column).to_i, "#{record.inspect}.#{column} not updated in database"
   end
   
   def debug

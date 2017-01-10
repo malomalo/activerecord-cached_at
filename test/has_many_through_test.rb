@@ -45,6 +45,17 @@ class HasManyThroughTest < ActiveSupport::TestCase
 
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
+  
+  test "inverse_of ::create" do
+    image = Image.create
+
+    time = Time.now + 60
+    ship = travel_to(time) do
+      assert_queries(3) { Ship.create(images: [image]) }
+    end
+
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
+  end
 
   test "::update" do
     ship = Ship.create
@@ -52,11 +63,10 @@ class HasManyThroughTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) do
-      image.update(title: "new title")
+      assert_queries(2) { image.update(title: "new title") }
     end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "::destroy" do
@@ -69,6 +79,18 @@ class HasManyThroughTest < ActiveSupport::TestCase
     end
 
     assert_equal time.to_i, ship.reload.images_cached_at.to_i
+  end
+
+  test "relationship.clear" do
+    ship = Ship.create
+    image = Image.create(ships: [ship])
+
+    time = Time.now + 60
+    travel_to(time) do
+      assert_queries(3) { ship.images.clear }
+    end
+
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "relationship model added via <<" do

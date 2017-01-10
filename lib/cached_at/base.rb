@@ -43,7 +43,6 @@ module CachedAt
             r.options[:cached_at] && r.options[:through] && r.options[:through] == reflection.inverse_of&.name
           end
         end
-
         
         next unless reflection.options[:cached_at] || reflection&.parent_reflection&.class == ActiveRecord::Reflection::HasAndBelongsToManyReflection || !through_connections.empty?
         next if instance_variable_defined?(:@relationships_cached_at_touched) && (!@relationships_cached_at_touched.nil? && @relationships_cached_at_touched[reflection.name])
