@@ -35,7 +35,8 @@ module CachedAt
       if using_reflection.inverse_of && using_reflection.inverse_of.options[:cached_at]
         cache_column = "#{using_reflection.name}_cached_at"
         owner.raw_write_attribute(cache_column, timestamp)
-        owner.update_columns(cache_column => timestamp)
+        #TODO: test with new record (fails in mls)
+        owner.update_columns(cache_column => timestamp) unless owner.new_record?
       end
     end
     
