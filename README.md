@@ -26,3 +26,8 @@ aren't updating the models you can just require the helpers:
 ## TODO:
 
  Add a `cache_key` method to the Model class that gets `MAX(cached_at)`
+
+
+
+change option to cache: true
+add cache_association helper

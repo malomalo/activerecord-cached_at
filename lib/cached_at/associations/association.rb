@@ -35,8 +35,8 @@ module CachedAt
       end
     end
     
-    def touch_through_reflections(reflections, timestamp)
-      reflections.each do |r|
+    def touch_through_reflections(timestamp)
+      reflection.through_relationship_endpoints.each do |r|
         cache_column = "#{r.inverse_of.name}_cached_at"
         
         source_assoc = owner.association(r.source_reflection_name.to_sym)
