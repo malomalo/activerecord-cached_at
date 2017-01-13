@@ -131,6 +131,24 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
     assert_in_memory_and_persisted(email, :email_messages_cached_at, time2)
   end
 
+  test "relationship model removed .delete(...)" do
+    email1 = Email.create
+    email2 = Email.create
+
+    time1 = Time.now
+    message = travel_to(time1) { EmailMessage.create(emails: [email1, email2]) }
+
+    time2 = Time.now + 60
+    travel_to(time2) {
+      debug do
+      assert_queries(2) { message.emails.delete(email1) }
+    end
+    }
+
+    assert_in_memory_and_persisted(email1, :email_messages_cached_at, time2)
+    assert_in_memory_and_persisted(email2, :email_messages_cached_at, time1)
+  end
+
   test "relationship model removed via = [...]" do
     email1 = Email.create
     email2 = Email.create
