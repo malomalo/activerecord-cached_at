@@ -26,37 +26,46 @@ class HasManyDependentDeleteAllTest < ActiveSupport::TestCase
 
   test "::create" do
     account = Account.create
-    
+
     time = Time.now + 60
     org = travel_to(time) do
-      Organization.create(accounts: [account])
+      debug do
+      assert_queries(2) { Organization.create(accounts: [account]) }
     end
-    
+    end
+
     assert_in_memory_and_persisted(account, :organization_cached_at, time)
   end
-  
+
   test "::update attributes" do
     account = Account.create
     org = Organization.create(accounts: [account])
 
     time = Time.now + 60
-    travel_to(time) { org.update(name: 'new name') }
+    travel_to(time) do
+      assert_queries(2) { org.update(name: 'new name') }
+    end
 
     assert_in_memory_and_persisted(account, :organization_cached_at, time)
   end
-  
+
   test "::update association" do
     account1 = Account.create
     account2 = Account.create
-    org = Organization.create(accounts: [account1])
+    t1 = Time.now
+    org = travel_to(t1) do
+      Organization.create(accounts: [account1])
+    end
 
     time = Time.now + 60
-    travel_to(time) { org.update(accounts: [account2]) }
+    travel_to(time) do
+      assert_queries(2) { org.update(accounts: [account2]) }
+    end
 
     assert_equal 0, Account.where(id: account1.id).count
-    assert_in_memory_and_persisted(account2, :organization_cached_at, time)
+    assert_in_memory_and_persisted(account2, :organization_cached_at, t1)
   end
-  
+
   test "::touch" do
     account = Account.create
     org = Organization.create(accounts: [account])

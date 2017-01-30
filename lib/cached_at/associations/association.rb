@@ -1,6 +1,10 @@
 module CachedAt
   module Association
     
+    def cache_column
+      "#{reflection.inverse_of.name}_cached_at"
+    end
+    
     def traverse_relationships(klass, relationships, query, cache_column, timestamp)
       if relationships.is_a?(Symbol)
         reflection = klass.reflect_on_association(relationships)

@@ -3,6 +3,7 @@ require File.expand_path(File.join(__FILE__, '../associations/association'))
 require File.expand_path(File.join(__FILE__, '../associations/has_one_association'))
 require File.expand_path(File.join(__FILE__, '../associations/belongs_to_association'))
 require File.expand_path(File.join(__FILE__, '../associations/collection_association'))
+require File.expand_path(File.join(__FILE__, '../associations/has_many_association'))
 require File.expand_path(File.join(__FILE__, '../associations/has_many_through_association'))
 
 require File.expand_path(File.join(__FILE__, '../reflections/abstract_reflection'))
@@ -51,12 +52,13 @@ module CachedAt
       self.class.reflect_on_all_associations.each do |reflection|
         next unless reflection.is_a?(ActiveRecord::Reflection::BelongsToReflection)
         cache_column = "#{reflection.name}_cached_at"
-
+        
         if self.attribute_names.include?(cache_column)
           if self.changes.has_key?(reflection.foreign_key) && self.changes[reflection.foreign_key][1].nil?
-            self.assign_attributes({ cache_column => current_time_from_proper_timezone })
+            self.raw_write_attribute(cache_column, current_time_from_proper_timezone)
+          elsif self.changes[reflection.foreign_key] && self.changes[cache_column]
           elsif (self.changes[reflection.foreign_key] || self.new_record? || (self.association(reflection.name).loaded? && self.send(reflection.name) && self.send(reflection.name).id.nil?)) && self.send(reflection.name).try(:cached_at)
-            self.assign_attributes({ cache_column => self.send(reflection.name).cached_at })
+            self.raw_write_attribute(cache_column, self.send(reflection.name).cached_at)
           end
         end
         
