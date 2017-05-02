@@ -13,8 +13,8 @@ module CachedAt
 
       cache_column = "#{options[:inverse_of]}_cached_at"
       if options[:polymorphic]
-        oldtype = owner.send("#{reflection.foreign_type}_was")
-        oldid = owner.send("#{reflection.foreign_key}_was")
+        oldtype = owner.send("#{reflection.foreign_type}_before_last_save")
+        oldid = owner.send("#{reflection.foreign_key}_before_last_save")
         newtype = owner.send(reflection.foreign_type)
         newid = owner.send(reflection.foreign_key)
         if !oldtype.nil? && oldtype == newtype
@@ -38,7 +38,7 @@ module CachedAt
           end
         end
       else
-        ids = [owner.send(reflection.foreign_key), owner.send("#{reflection.foreign_key}_was")].compact.uniq
+        ids = [owner.send(reflection.foreign_key), owner.send("#{reflection.foreign_key}_before_last_save")].compact.uniq
         query = klass.where({ reflection.association_primary_key => ids })
         query.update_all({ cache_column => timestamp })
         traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)

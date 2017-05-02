@@ -31,8 +31,9 @@ module CachedAt
     def update_relations_cached_at(timestamp: nil, method: nil)
       method = instance_variable_defined?(:@new_record_before_save) && @new_record_before_save ? :create : :update if method.nil?
       
-      return if method == :create && changes.empty?
-      return if method == :update && changes.empty?
+      diff = saved_changes.transform_values(&:first)
+      return if method == :create && diff.empty?
+      return if method == :update && diff.empty?
       
       timestamp ||= current_time_from_proper_timezone
 

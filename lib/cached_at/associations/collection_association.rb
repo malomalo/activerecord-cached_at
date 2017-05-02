@@ -10,7 +10,7 @@ module CachedAt
       end
 
       cache_column = "#{reflection.inverse_of.name}_cached_at"
-      ids = [owner.send(reflection.association_primary_key), owner.send("#{reflection.association_primary_key}_was")].compact.uniq
+      ids = [owner.send(reflection.association_primary_key), owner.send("#{reflection.association_primary_key}_before_last_save")].compact.uniq
       query = klass.where({ reflection.foreign_key => ids })
     
       if loaded?
