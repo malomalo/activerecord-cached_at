@@ -43,11 +43,7 @@ class PolymorphicBelongsToTest < ActiveSupport::TestCase
       Image.create(item: org)
     end
 
-    # Memory
-    assert_equal time.to_i, org.images_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, org.reload.images_cached_at.to_i
+    assert_in_memory_and_persisted(org, :images_cached_at, time)
   end
   
   test "::update" do
@@ -57,11 +53,7 @@ class PolymorphicBelongsToTest < ActiveSupport::TestCase
 
     travel_to(time) { image.update(title: 'new name') }
 
-    # Memory
-    assert_equal time.to_i, org.images_cached_at.to_i
-
-    # DB
-    assert_equal time.to_i, org.reload.images_cached_at.to_i
+    assert_in_memory_and_persisted(org, :images_cached_at, time)
   end
 
   test "::update changing relationship" do
@@ -71,14 +63,9 @@ class PolymorphicBelongsToTest < ActiveSupport::TestCase
     time = Time.now + 60
     
     travel_to(time) { image.update(item: newitem) }
-    
-    # Memory
-    assert_equal time.to_i, newitem.images_cached_at.to_i
-    assert_equal time.to_i, olditem.images_cached_at.to_i
 
-    # DB
-    assert_equal time.to_i, newitem.reload.images_cached_at.to_i
-    assert_equal time.to_i, olditem.reload.images_cached_at.to_i
+    assert_in_memory_and_persisted(newitem, :images_cached_at, time)
+    assert_in_memory_and_persisted(olditem, :images_cached_at, time)
   end
   
   test "::update changing relationship to a different model" do
@@ -89,13 +76,8 @@ class PolymorphicBelongsToTest < ActiveSupport::TestCase
     
     travel_to(time) { image.update(item: newitem) }
     
-    # Memory
-    assert_equal time.to_i, newitem.images_cached_at.to_i
-    assert_equal time.to_i, olditem.images_cached_at.to_i
-
-    # DB
-    assert_equal time.to_i, newitem.reload.images_cached_at.to_i
-    assert_equal time.to_i, olditem.reload.images_cached_at.to_i
+    assert_in_memory_and_persisted(newitem, :images_cached_at, time)
+    assert_in_memory_and_persisted(olditem, :images_cached_at, time)
   end
 
   test "::destroy" do
@@ -103,13 +85,11 @@ class PolymorphicBelongsToTest < ActiveSupport::TestCase
     image = Image.create(item: org)
     time = Time.now + 60
 
-    travel_to(time) { image.destroy }
+    travel_to(time) do
+      image.destroy
+    end
 
-    # Memory
-    assert_equal time.to_i, org.images_cached_at.to_i
-
-    # DB
-    assert_equal time.to_i, org.reload.images_cached_at.to_i
+    assert_in_memory_and_persisted(org, :images_cached_at, time)
   end
 
   test ".relationship = nil" do
@@ -119,13 +99,8 @@ class PolymorphicBelongsToTest < ActiveSupport::TestCase
 
     travel_to(time) { image.update(item: nil) }
 
-    # Memory
-    assert_equal time.to_i, org.images_cached_at.to_i
-    # assert_equal time.to_i, account.items_cached_at.to_i
 
-    # DB
-    assert_equal time.to_i, org.reload.images_cached_at.to_i
-    # assert_equal time.to_i, account.reload.items_cached_at.to_i
+    assert_in_memory_and_persisted(org, :images_cached_at, time)
   end
   
 end

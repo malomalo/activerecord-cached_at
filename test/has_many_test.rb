@@ -55,7 +55,7 @@ class HasManyTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) do
-      assert_queries(3) { org.update(accounts: [account2]) }
+      assert_queries(2) { org.update(accounts: [account2]) }
     end
     
     assert_nil account1.reload.organization_id

@@ -45,7 +45,7 @@ class HasManyThroughTest < ActiveSupport::TestCase
 
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
-  
+
   test "inverse_of ::create" do
     image = Image.create
 
@@ -75,10 +75,10 @@ class HasManyThroughTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) do
-      image.destroy
+      assert_queries(4) { image.destroy }
     end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "relationship.clear" do
@@ -98,10 +98,11 @@ class HasManyThroughTest < ActiveSupport::TestCase
     image = Image.create
 
     time = Time.now + 60
-    travel_to(time) { ship.images << image }
+    travel_to(time) do
+      assert_queries(2) { ship.images << image }
+    end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "relationship set via = [...]" do
@@ -109,10 +110,11 @@ class HasManyThroughTest < ActiveSupport::TestCase
     image = Image.create
 
     time = Time.now + 60
-    travel_to(time) { ship.images = [image] }
+    travel_to(time) do
+      ship.images = [image]
+    end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "relationship model removed via = [...]" do
@@ -121,34 +123,35 @@ class HasManyThroughTest < ActiveSupport::TestCase
     ship = Ship.create(images: [image1, image2])
 
     time = Time.now + 60
-    travel_to(time) { ship.images = [image2] }
+    travel_to(time) do
+      assert_queries(2) { ship.images = [image2] }
+    end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
-  
+
   test "added to relationship created with through model" do
     ship = Ship.create
     image = Image.create
-    
+
     time = Time.now + 60
     travel_to(time) do
       assert_queries(2) { ImageOrdering.create(ship: ship, image: image) }
     end
-    
+
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
-  
+
   test "removed from relationship by destroying through model" do
     ship = Ship.create
     image = Image.create
     io = ImageOrdering.create(ship: ship, image: image)
-    
+
     time = Time.now + 60
     travel_to(time) do
       assert_queries(2) { io.destroy }
     end
-    
+
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 

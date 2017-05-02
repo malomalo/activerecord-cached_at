@@ -14,7 +14,7 @@ require 'minitest/reporters'
 require 'cached_at'
 
 # Setup the test db
-ActiveSupport.test_order = :random
+ActiveSupport.test_order = :sorted
 
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
@@ -121,6 +121,7 @@ class ActiveSupport::TestCase
 
     def call(name, start, finish, message_id, values)
       sql = values[:sql]
+      values[:binds].each { |bind| sql.sub('?', bind.value.to_s) }
 
       # FIXME: this seems bad. we should probably have a better way to indicate
       # the query was cached
@@ -129,7 +130,7 @@ class ActiveSupport::TestCase
       self.class.log_all << sql
       unless ignore =~ sql
         if $debugging
-        puts caller.select { |l| l.starts_with?(File.expand_path('../../lib', __FILE__)) }
+        puts caller.select { |l| l.starts_with?(File.expand_path('../../lib', __FILE__)) || l.index('lib/active_record') }
         puts "\n\n" 
         end
       end

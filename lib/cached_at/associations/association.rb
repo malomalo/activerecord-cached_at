@@ -53,6 +53,9 @@ module CachedAt
       end
     end
     
+    def owner_destroyed(timestamp)
+    end
+    
   end
 end
 

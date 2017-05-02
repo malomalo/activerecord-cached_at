@@ -38,7 +38,7 @@ class HasManyThroughDependentDeleteAllTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     image = travel_to(time) do
-      Image.create(ships: [ship])
+      assert_queries(3) { Image.create(ships: [ship]) }
     end
 
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
@@ -50,7 +50,7 @@ class HasManyThroughDependentDeleteAllTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) do
-      image.update(title: "new title")
+      assert_queries(2) { image.update(title: "new title") }
     end
 
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
@@ -62,7 +62,7 @@ class HasManyThroughDependentDeleteAllTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) do
-      image.destroy
+      assert_queries(3) { image.destroy }
     end
 
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
@@ -73,7 +73,9 @@ class HasManyThroughDependentDeleteAllTest < ActiveSupport::TestCase
     image = Image.create
 
     time = Time.now + 60
-    travel_to(time) { ship.images << image }
+    travel_to(time) do
+      assert_queries(2) { ship.images << image }
+    end
 
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
@@ -83,7 +85,9 @@ class HasManyThroughDependentDeleteAllTest < ActiveSupport::TestCase
     image = Image.create
 
     time = Time.now + 60
-    travel_to(time) { ship.images = [image] }
+    travel_to(time) do
+      assert_queries(3) { ship.images = [image] }
+    end
 
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
@@ -95,7 +99,7 @@ class HasManyThroughDependentDeleteAllTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) {
-      ship.images = [image2]
+      assert_queries(2) { ship.images = [image2] }
     }
 
     assert_in_memory_and_persisted(ship, :images_cached_at, time)

@@ -45,11 +45,10 @@ class HasManyThroughPolymorhicTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     image = travel_to(time) do
-      Image.create(ships: [ship])
+      assert_queries(3) { Image.create(ships: [ship]) }
     end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "::update" do
@@ -58,11 +57,10 @@ class HasManyThroughPolymorhicTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) do
-      image.update(title: "new title")
+      assert_queries(2) { image.update(title: "new title") }
     end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "::destroy" do
@@ -71,10 +69,10 @@ class HasManyThroughPolymorhicTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     travel_to(time) do
-      image.destroy
+      assert_queries(4) { image.destroy }
     end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "relationship model added via <<" do
@@ -82,10 +80,10 @@ class HasManyThroughPolymorhicTest < ActiveSupport::TestCase
     image = Image.create
 
     time = Time.now + 60
-    travel_to(time) { ship.images << image }
-
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    travel_to(time) do
+      assert_queries(2) { ship.images << image }
+    end
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "relationship set via = [...]" do
@@ -93,10 +91,11 @@ class HasManyThroughPolymorhicTest < ActiveSupport::TestCase
     image = Image.create
 
     time = Time.now + 60
-    travel_to(time) { ship.images = [image] }
+    travel_to(time) do
+      assert_queries(3) { ship.images = [image] }
+    end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "relationship model removed via = [...]" do
@@ -105,11 +104,10 @@ class HasManyThroughPolymorhicTest < ActiveSupport::TestCase
     ship = Ship.create(images: [image1, image2])
 
     time = Time.now + 60
-    travel_to(time) { ship.images = [image2] }
+    travel_to(time) do
+      assert_queries(2) { ship.images = [image2] }
+    end
 
-    assert_equal time.to_i, ship.reload.images_cached_at.to_i
-    # assert_equal time.to_i, image.reload.ships_cached_at.to_i
+    assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
-
-
 end

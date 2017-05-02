@@ -1,12 +1,16 @@
 module CachedAt
   module HasManyThroughAssociation
+
+    def cache_column
+      "#{(reflection.parent_reflection || reflection).inverse_of.name}_cached_at"
+    end
   
     def touch_cached_at(timestamp, method)
       using_reflection = reflection.parent_reflection || reflection
-      
+
       if using_reflection.options[:cached_at]
         return if method == :create && !using_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
-
+        
         if using_reflection.inverse_of.nil?
           puts "WARNING: cannot updated cached at for relationship: #{owner.class.name}.#{using_reflection.name}, inverse_of not set"
           return
@@ -62,6 +66,28 @@ module CachedAt
       end
     end
 
+    def owner_destroyed(timestamp)
+      using_reflection = reflection.parent_reflection || reflection
+
+      if using_reflection.options[:cached_at]
+        scope.update_all({ cache_column => timestamp })
+      
+        if loaded?
+          target.each { |r| r.raw_write_attribute(cache_column, timestamp) }
+        end
+      end
+    end
+    
+    def save_through_record(record)
+      tr = build_through_record(record)
+      tr.instance_variable_set(:@cached_at_skip_through_records, true)
+      rvalue = tr.save!
+      tr.instance_variable_set(:@cached_at_skip_through_records, false)
+      rvalue
+    ensure
+      @through_records.delete(record.object_id)
+    end
+    
   end
 end
 

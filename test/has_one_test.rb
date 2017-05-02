@@ -12,24 +12,13 @@ class HasOneTest < ActiveSupport::TestCase
       t.integer  "account_id"
       t.datetime 'account_cached_at',      null: false
     end
-    
-    create_table "avatars", force: :cascade do |t|
-      t.string "title"
-      t.integer  "account_id"
-      t.datetime 'account_cached_at',      null: false
-    end
   end
   
   class Account < ActiveRecord::Base
     has_one :email, cached_at: true, inverse_of: :account
-    has_one :avatar, cached_at: true, inverse_of: :account, dependent: :nullify
   end
 
   class Email < ActiveRecord::Base
-    belongs_to :account
-  end
-  
-  class Avatar < ActiveRecord::Base
     belongs_to :account
   end
 
@@ -38,14 +27,10 @@ class HasOneTest < ActiveSupport::TestCase
     
     time = Time.now + 60
     account = travel_to(time) do
-      Account.create(email: email)
+      assert_queries(2) { Account.create(email: email) }
     end
     
-    # Memory
-    assert_equal time.to_i, email.account_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, email.reload.account_cached_at.to_i
+    assert_in_memory_and_persisted(email, :account_cached_at, time)
   end
   
   test "::update" do
@@ -53,13 +38,11 @@ class HasOneTest < ActiveSupport::TestCase
     email = Email.create(account: account)
 
     time = Time.now + 60
-    travel_to(time) { account.update(name: 'new name') }
+    travel_to(time) do
+      assert_queries(2) { account.update(name: 'new name') }
+    end
 
-    # Memory
-    assert_equal time.to_i, email.account_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, email.reload.account_cached_at.to_i
+    assert_in_memory_and_persisted(email, :account_cached_at, time)
   end
 
   test "::destroy" do
@@ -67,27 +50,25 @@ class HasOneTest < ActiveSupport::TestCase
     email = Email.create(account: account)
 
     time = Time.now + 60
-    travel_to(time) { account.destroy }
+    travel_to(time) do
+      assert_queries(2) { account.destroy }
+    end
 
-    # Memory
-    assert_equal time.to_i, email.account_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, email.reload.account_cached_at.to_i
+    assert_in_memory_and_persisted(email, :account_cached_at, time)
   end
   
-  test "::destroy dependent: :nullify" do
-    account = Account.create
-    avatar = Avatar.create(account: account)
-
-    time = Time.now + 60
-    travel_to(time) { account.destroy }
-  
-    # Memory
-    assert_equal time.to_i, avatar.account_cached_at.to_i
-    
-    # DB
-    assert_equal time.to_i, avatar.reload.account_cached_at.to_i
-  end
+  # test "::destroy dependent: :nullify" do
+  #   account = Account.create
+  #   avatar = Avatar.create(account: account)
+  #
+  #   time = Time.now + 60
+  #   travel_to(time) { account.destroy }
+  #
+  #   # Memory
+  #   assert_equal time.to_i, avatar.account_cached_at.to_i
+  #
+  #   # DB
+  #   assert_equal time.to_i, avatar.reload.account_cached_at.to_i
+  # end
   
 end

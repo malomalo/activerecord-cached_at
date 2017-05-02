@@ -9,7 +9,7 @@ module ActiveRecord
 
         column(:created_at, :datetime, options)
         column(:updated_at, :datetime, options)
-        column(:cached_at, :datetime, options)
+        column(:cached_at, :datetime, options) unless @name == ActiveRecord::Base.internal_metadata_table_name
       end
     end
 

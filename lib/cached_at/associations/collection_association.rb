@@ -47,25 +47,19 @@ module CachedAt
       traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
     end
 
-    def add_to_target(record, skip_callbacks = false, &block)
-      value = super
-      touch_records_cached_at([record], Time.now) if !(instance_variable_defined?(:@caching) && @caching)
-      value
-    end
-    
-    def replace_records(new_target, original_target)
-      @caching = true
-      changed_records = (target - new_target) | (new_target - target)
-      value = super
-      touch_records_cached_at(changed_records, Time.now) unless owner.new_record?
-      value
-    ensure
-      @caching = false
-    end
-
     def delete_all(dependent = nil)
       touch_cached_at(Time.now, :destroy)
       super
+    end
+    
+    def owner_destroyed(timestamp)
+      klass.where(reflection.foreign_key => owner.id).update_all({
+        cache_column => timestamp
+      })
+      
+      if loaded?
+        target.each { |r| r.raw_write_attribute(cache_column, timestamp) }
+      end
     end
     
   end

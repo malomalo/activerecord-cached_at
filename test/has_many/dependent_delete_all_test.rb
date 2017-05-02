@@ -29,9 +29,7 @@ class HasManyDependentDeleteAllTest < ActiveSupport::TestCase
 
     time = Time.now + 60
     org = travel_to(time) do
-      debug do
       assert_queries(2) { Organization.create(accounts: [account]) }
-    end
     end
 
     assert_in_memory_and_persisted(account, :organization_cached_at, time)
@@ -52,10 +50,7 @@ class HasManyDependentDeleteAllTest < ActiveSupport::TestCase
   test "::update association" do
     account1 = Account.create
     account2 = Account.create
-    t1 = Time.now
-    org = travel_to(t1) do
-      Organization.create(accounts: [account1])
-    end
+    org = Organization.create(accounts: [account1])
 
     time = Time.now + 60
     travel_to(time) do
@@ -63,7 +58,7 @@ class HasManyDependentDeleteAllTest < ActiveSupport::TestCase
     end
 
     assert_equal 0, Account.where(id: account1.id).count
-    assert_in_memory_and_persisted(account2, :organization_cached_at, t1)
+    assert_in_memory_and_persisted(account2, :organization_cached_at, time)
   end
 
   test "::touch" do
@@ -71,7 +66,9 @@ class HasManyDependentDeleteAllTest < ActiveSupport::TestCase
     org = Organization.create(accounts: [account])
 
     time = Time.now + 60
-    travel_to(time) { org.touch }
+    travel_to(time) do
+      assert_queries(2) { org.touch }
+    end
 
     assert_in_memory_and_persisted(account, :organization_cached_at, time)
   end
@@ -81,7 +78,9 @@ class HasManyDependentDeleteAllTest < ActiveSupport::TestCase
     org = Organization.create(accounts: [account])
 
     time = Time.now + 60
-    travel_to(time) { org.destroy }
+    travel_to(time) do
+      assert_queries(2) { org.destroy }
+    end
 
     assert_equal 0, Account.where(id: account.id).count
   end
