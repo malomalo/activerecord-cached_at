@@ -3,6 +3,7 @@ require File.expand_path(File.join(__FILE__, '../associations/association'))
 require File.expand_path(File.join(__FILE__, '../associations/has_one_association'))
 require File.expand_path(File.join(__FILE__, '../associations/belongs_to_association'))
 require File.expand_path(File.join(__FILE__, '../associations/collection_association'))
+require File.expand_path(File.join(__FILE__, '../associations/collection_proxy'))
 require File.expand_path(File.join(__FILE__, '../associations/has_many_through_association'))
 
 require File.expand_path(File.join(__FILE__, '../reflections/abstract_reflection'))

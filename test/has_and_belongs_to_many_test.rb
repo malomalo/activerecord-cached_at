@@ -140,9 +140,7 @@ class HasManyAndBelongsToManyTest < ActiveSupport::TestCase
 
     time2 = Time.now + 60
     travel_to(time2) {
-      debug do
       assert_queries(2) { message.emails.delete(email1) }
-    end
     }
 
     assert_in_memory_and_persisted(email1, :email_messages_cached_at, time2)

@@ -1,1 +1,1 @@
-exclude = '{$exclude,.tm_properties,coverage}'
+exclude = '{$exclude,log,tmp,.tm_properties,public/system,coverage}'
