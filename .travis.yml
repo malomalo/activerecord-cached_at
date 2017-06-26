@@ -35,6 +35,7 @@ install:
   - sed -i "/require 'support\/connection'/a \$LOAD_PATH.unshift\(File.expand_path\('~\/build\/malomalo\/activerecord-cached_at\/lib'\)\)\nrequire 'cached_at'" ~/build/rails/activerecord/test/cases/helper.rb
   - cat ~/build/rails/Gemfile
   - "sed -i \"/group :db do/a gem 'activerecord-cached_at', require: 'cached_at', path: File.expand_path\\('~\\/build\\/malomalo\\/activerecord-cached_at'\\)\" ~/build/rails/Gemfile"
+  - sed -i "/rb-inotify/d" ~/build/rails/Gemfile
   - cat ~/build/rails/Gemfile
   - bundle install --jobs=3 --retry=3
   - popd
