@@ -1,3 +1,3 @@
 module CachedAt
-  VERSION = '2.0.13'
+  VERSION = '5.1.0'
 end
