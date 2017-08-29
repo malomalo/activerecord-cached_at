@@ -15,7 +15,7 @@ require 'cached_at'
 
 # Setup the test db
 ActiveSupport.test_order = :random
-
+$debugging = false
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 class ActiveSupport::TestCase

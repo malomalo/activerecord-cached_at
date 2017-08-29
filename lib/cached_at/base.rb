@@ -55,9 +55,9 @@ module CachedAt
         cache_column = "#{reflection.name}_cached_at"
 
         if self.attribute_names.include?(cache_column)
-          if self.changes.has_key?(reflection.foreign_key) && self.changes[reflection.foreign_key][1].nil?
+          if self.changes_to_save.has_key?(reflection.foreign_key) && self.changes_to_save[reflection.foreign_key][1].nil?
             self.assign_attributes({ cache_column => current_time_from_proper_timezone })
-          elsif (self.changes[reflection.foreign_key] || self.new_record? || (self.association(reflection.name).loaded? && self.send(reflection.name) && self.send(reflection.name).id.nil?)) && self.send(reflection.name).try(:cached_at)
+          elsif (self.changes_to_save[reflection.foreign_key] || self.new_record? || (self.association(reflection.name).loaded? && self.send(reflection.name) && self.send(reflection.name).id.nil?)) && self.send(reflection.name).try(:cached_at)
             self.assign_attributes({ cache_column => self.send(reflection.name).cached_at })
           end
         end
