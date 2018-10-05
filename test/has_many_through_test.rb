@@ -36,7 +36,7 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
 
   test "::create" do
-    ship = Ship.create
+    ship = Ship.create!
 
     time = Time.now + 60
     image = travel_to(time) do
@@ -47,19 +47,19 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
   
   test "inverse_of ::create" do
-    image = Image.create
+    image = Image.create!
 
     time = Time.now + 60
     ship = travel_to(time) do
-      assert_queries(3) { Ship.create(images: [image]) }
+      assert_queries(3) { Ship.create!(images: [image]) }
     end
 
     assert_in_memory_and_persisted(ship, :images_cached_at, time)
   end
 
   test "::update" do
-    ship = Ship.create
-    image = Image.create(ships: [ship])
+    ship = Ship.create!
+    image = Image.create!(ships: [ship])
 
     time = Time.now + 60
     travel_to(time) do
@@ -70,8 +70,8 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
 
   test "::destroy" do
-    ship = Ship.create
-    image = Image.create(ships: [ship])
+    ship = Ship.create!
+    image = Image.create!(ships: [ship])
 
     time = Time.now + 60
     travel_to(time) do
@@ -82,8 +82,8 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
 
   test "relationship.clear" do
-    ship = Ship.create
-    image = Image.create(ships: [ship])
+    ship = Ship.create!
+    image = Image.create!(ships: [ship])
 
     time = Time.now + 60
     travel_to(time) do
@@ -94,8 +94,8 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
 
   test "relationship model added via <<" do
-    ship = Ship.create
-    image = Image.create
+    ship = Ship.create!
+    image = Image.create!
 
     time = Time.now + 60
     travel_to(time) { ship.images << image }
@@ -105,8 +105,8 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
 
   test "relationship set via = [...]" do
-    ship = Ship.create
-    image = Image.create
+    ship = Ship.create!
+    image = Image.create!
 
     time = Time.now + 60
     travel_to(time) { ship.images = [image] }
@@ -116,8 +116,8 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
 
   test "relationship model removed via = [...]" do
-    image1 = Image.create
-    image2 = Image.create
+    image1 = Image.create!
+    image2 = Image.create!
     ship = Ship.create(images: [image1, image2])
 
     time = Time.now + 60
@@ -128,8 +128,8 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
   
   test "added to relationship created with through model" do
-    ship = Ship.create
-    image = Image.create
+    ship = Ship.create!
+    image = Image.create!
     
     time = Time.now + 60
     travel_to(time) do
@@ -140,8 +140,8 @@ class HasManyThroughTest < ActiveSupport::TestCase
   end
   
   test "removed from relationship by destroying through model" do
-    ship = Ship.create
-    image = Image.create
+    ship = Ship.create!
+    image = Image.create!
     io = ImageOrdering.create(ship: ship, image: image)
     
     time = Time.now + 60

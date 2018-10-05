@@ -14,7 +14,7 @@ module CachedAt
       query = klass.where({ reflection.foreign_key => ids })
     
       if loaded?
-        target.each { |r| r.raw_write_attribute(cache_column, timestamp) }
+        target.each { |r| r.send(:write_attribute_without_type_cast, cache_column, timestamp) }
       end
       
       if method != :destroy
@@ -40,7 +40,7 @@ module CachedAt
 
       cache_column = "#{reflection.inverse_of.name}_cached_at"
 
-      records.each { |r| r.raw_write_attribute(cache_column, timestamp) unless r.destroyed? }
+      records.each { |r| r.send(:write_attribute_without_type_cast, cache_column, timestamp) unless r.destroyed? }
 
       query = klass.where({ klass.primary_key => records.map(&:id) })
       query.update_all({ cache_column => timestamp })
