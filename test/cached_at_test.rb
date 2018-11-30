@@ -6,6 +6,7 @@ class CachedAtTest < ActiveSupport::TestCase
     create_table "accounts", force: :cascade do |t|
       t.string   "name",                    limit: 255
       t.datetime 'cached_at',               null: false
+      t.string   'ignore_column'
       t.integer  "organization_id"
       t.datetime 'organization_cached_at',  null: false
       t.datetime 'organization_images_cached_at',  null: false
@@ -16,6 +17,7 @@ class CachedAtTest < ActiveSupport::TestCase
   end
   
   class Account < ActiveRecord::Base
+    cached_at ignore: :ignore_column
   end
   
   class Region < ActiveRecord::Base
@@ -50,6 +52,21 @@ class CachedAtTest < ActiveSupport::TestCase
     assert_equal time.to_i, model.cached_at.to_i
   end
 
+  test "#update just ignored column doesn't update cached at" do
+    old_time = 1.week.ago
+    time = Time.now
+
+    model = travel_to(1.week.ago) do
+      assert_queries(1) { Account.create }
+    end
+
+    travel_to(time) do
+      assert_queries(1) { model.update(:ignore_column => 'new') }
+    end
+
+    assert_equal old_time.to_i, model.cached_at.to_i
+  end
+
   test "::cached_at_columns_for_includes" do
     assert_equal ['organization_cached_at'], Account.cached_at_columns_for_includes([:organization])
     assert_equal ['organization_cached_at', 'region_cached_at'], Account.cached_at_columns_for_includes([:organization, :region])
@@ -69,7 +86,8 @@ class CachedAtTest < ActiveSupport::TestCase
     t1 = Time.now
     t2 = Time.now + 10
     t3 = Time.now + 20
-    account = Account.create(cached_at: t1, organization_cached_at: t2, organization_images_cached_at: t3)
+    account = Account.create
+    account.update_columns(cached_at: t1, organization_cached_at: t2, organization_images_cached_at: t3)
 
     assert_equal "cached_at_test/accounts/#{account.id}-#{t1.utc.to_s(:usec)}", account.cache_key
     assert_equal "cached_at_test/accounts/#{account.id}+b4c1948c087fafc89a88450fcbb64c77@#{t2.utc.to_s(:usec)}", account.cache_key(:organization)

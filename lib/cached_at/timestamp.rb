@@ -7,7 +7,7 @@ module ActiveRecord
         private
     
         def timestamp_attributes_for_update
-          ['updated_at', 'cached_at']
+          ['updated_at']
         end
 
         def timestamp_attributes_for_create

@@ -13,11 +13,25 @@ module CachedAt
     extend ActiveSupport::Concern
 
     included do
+      class_attribute   :cached_at_settings, default: {ignore: ['cached_at', 'updated_at', 'created_at']}
+      before_save       :set_cached_at
       before_save       :update_belongs_to_cached_at_keys
       before_destroy    { update_relations_cached_at(method: :destroy) }
 
       after_touch       { update_relations_cached_at_from_cached_at(method: :touch) }
-      after_save     :update_relations_cached_at_from_cached_at
+      after_save        :update_relations_cached_at_from_cached_at
+    end
+
+    class_methods do
+      def cached_at(ignore: [])
+        ignore = [ignore] if !ignore.is_a?(Array)
+        self.cached_at_settings[:ignore].push(*ignore.map(&:to_s))
+      end
+    end
+
+    def touch(*names, time: nil)
+      names.push('cached_at')
+      super(*names, time: time)
     end
 
     private
@@ -49,6 +63,14 @@ module CachedAt
       end
     end
 
+    def set_cached_at
+      return if !self.class.column_names.include?('cached_at')
+      diff = changes.transform_values(&:first)
+      return if diff.keys.all? { |k| cached_at_settings[:ignore].include?(k) }
+
+      self.cached_at = current_time_from_proper_timezone
+    end
+
     def update_belongs_to_cached_at_keys
       self.class.reflect_on_all_associations.each do |reflection|
         next unless reflection.is_a?(ActiveRecord::Reflection::BelongsToReflection)
@@ -64,7 +86,7 @@ module CachedAt
         
       end
     end
-    
+
   end
 end
 

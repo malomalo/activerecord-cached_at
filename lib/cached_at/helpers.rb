@@ -31,7 +31,8 @@ module CachedAt
 
       def cache_key(includes = nil)
         if includes.nil? || includes.empty?
-          super
+          timestamp = max_updated_column_timestamp(['cached_at']).utc.to_s(cache_timestamp_format)
+          "#{model_name.cache_key}/#{id}-#{timestamp}"
         else
           timestamp_keys = ['cached_at'] + self.class.cached_at_columns_for_includes(includes)
           timestamp = max_updated_column_timestamp(timestamp_keys).utc.to_s(cache_timestamp_format)
