@@ -20,6 +20,14 @@ Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 class ActiveSupport::TestCase
 
+  def with_cache_versioning(value = true)
+    @old_cache_versioning = ActiveRecord::Base.cache_versioning
+    ActiveRecord::Base.cache_versioning = value
+    yield
+  ensure
+    ActiveRecord::Base.cache_versioning = @old_cache_versioning
+  end
+
   # File 'lib/active_support/testing/declarative.rb'
   def self.test(name, &block)
     test_name = "test_#{name.gsub(/\s+/, '_')}".to_sym

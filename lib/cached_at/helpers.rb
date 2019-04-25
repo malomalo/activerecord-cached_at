@@ -31,15 +31,30 @@ module CachedAt
 
       def cache_key(includes = nil)
         if includes.nil? || includes.empty?
-          timestamp = max_updated_column_timestamp(['cached_at']).utc.to_s(cache_timestamp_format)
-          "#{model_name.cache_key}/#{id}-#{timestamp}"
+          if cache_versioning
+            "#{model_name.cache_key}/#{id}"
+          else
+            "#{model_name.cache_key}/#{id}@#{cache_version}"
+          end
+        else
+          digest = Digest::MD5.hexdigest(paramaterize_cache_includes(includes))
+          if cache_versioning
+            "#{model_name.cache_key}/#{id}+#{digest}"
+          else
+            "#{model_name.cache_key}/#{id}+#{digest}@#{cache_version(includes)}"
+          end
+        end
+      end
+
+      def cache_version(includes = nil)
+        timestamp = if includes.nil? || includes.empty?
+          try(:cached_at) || try(:cached_at)
         else
           timestamp_keys = ['cached_at'] + self.class.cached_at_columns_for_includes(includes)
-          timestamp = max_updated_column_timestamp(timestamp_keys).utc.to_s(cache_timestamp_format)
-          digest ||= Digest::MD5.new()
-          digest << paramaterize_cache_includes(includes)
-          "#{model_name.cache_key}/#{id}+#{digest.hexdigest}@#{timestamp}"
+          timestamp = max_updated_column_timestamp(timestamp_keys)
         end
+        
+        timestamp.utc.to_s(:usec)
       end
 
       # TODO

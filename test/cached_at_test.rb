@@ -46,7 +46,7 @@ class CachedAtTest < ActiveSupport::TestCase
     end
     
     travel_to(time) do
-      assert_queries(1) { model.update(:name => 'new') }
+      assert_queries(1) { model.update(name: 'new') }
     end
     
     assert_equal time.to_i, model.cached_at.to_i
@@ -61,7 +61,7 @@ class CachedAtTest < ActiveSupport::TestCase
     end
 
     travel_to(time) do
-      assert_queries(1) { model.update(:ignore_column => 'new') }
+      assert_queries(1) { model.update(ignore_column: 'new') }
     end
 
     assert_equal old_time.to_i, model.cached_at.to_i
@@ -89,10 +89,17 @@ class CachedAtTest < ActiveSupport::TestCase
     account = Account.create
     account.update_columns(cached_at: t1, organization_cached_at: t2, organization_images_cached_at: t3)
 
-    assert_equal "cached_at_test/accounts/#{account.id}-#{t1.utc.to_s(:usec)}", account.cache_key
+    assert_equal "cached_at_test/accounts/#{account.id}@#{t1.utc.to_s(:usec)}", account.cache_key
     assert_equal "cached_at_test/accounts/#{account.id}+b4c1948c087fafc89a88450fcbb64c77@#{t2.utc.to_s(:usec)}", account.cache_key(:organization)
     assert_equal "cached_at_test/accounts/#{account.id}+b471431f7777fe57283f68842e724add@#{t3.utc.to_s(:usec)}", account.cache_key(organization: :images)
     assert_equal "cached_at_test/accounts/#{account.id}+b471431f7777fe57283f68842e724add@#{t3.utc.to_s(:usec)}", account.cache_key([organization: [:images]])
+    
+    with_cache_versioning do
+      assert_equal "cached_at_test/accounts/#{account.id}", account.cache_key
+      assert_equal "cached_at_test/accounts/#{account.id}+b4c1948c087fafc89a88450fcbb64c77", account.cache_key(:organization)
+      assert_equal "cached_at_test/accounts/#{account.id}+b471431f7777fe57283f68842e724add", account.cache_key(organization: :images)
+      assert_equal "cached_at_test/accounts/#{account.id}+b471431f7777fe57283f68842e724add", account.cache_key([organization: [:images]])      
+    end
   end
 
   # test 'counter caches' do

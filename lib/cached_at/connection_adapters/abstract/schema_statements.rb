@@ -7,7 +7,7 @@ module ActiveRecord
         
         add_column table_name, :created_at, :datetime, options
         add_column table_name, :updated_at, :datetime, options
-        add_column table_name, :cached_at, :datetime, options
+        add_column table_name, :cached_at,  :datetime, options
       end
       
       def remove_timestamps(table_name, options = {})
