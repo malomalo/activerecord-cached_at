@@ -51,7 +51,7 @@ module CachedAt
           try(:cached_at) || try(:cached_at)
         else
           timestamp_keys = ['cached_at'] + self.class.cached_at_columns_for_includes(includes)
-          timestamp = max_updated_column_timestamp(timestamp_keys)
+          timestamp = timestamp_keys.map { |attr| self[attr]&.to_time }.compact.max
         end
         
         timestamp.utc.to_s(:usec)
