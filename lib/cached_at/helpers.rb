@@ -29,7 +29,7 @@ module CachedAt
 
       end
 
-      def cache_key(includes = nil)
+      def cache_key(*includes)
         if includes.nil? || includes.empty?
           if cache_versioning
             "#{model_name.cache_key}/#{id}"
