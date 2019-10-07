@@ -46,6 +46,14 @@ module CachedAt
         end
       end
 
+      def cache_key_with_version(*includes)
+        if version = cache_version(*includes)
+          "#{cache_key(*includes)}-#{version}"
+        else
+          cache_key(*includes)
+        end
+      end
+
       def cache_version(includes = nil)
         timestamp = if includes.nil? || includes.empty?
           try(:cached_at) || try(:cached_at)
