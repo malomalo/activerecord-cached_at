@@ -54,8 +54,8 @@ module CachedAt
         end
       end
 
-      def cache_version(includes = nil)
-        timestamp = if includes.nil? || includes.empty?
+      def cache_version(*includes)
+        timestamp = if includes.empty?
           try(:cached_at) || try(:cached_at)
         else
           timestamp_keys = ['cached_at'] + self.class.cached_at_columns_for_includes(includes)
