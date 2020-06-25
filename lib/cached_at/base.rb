@@ -37,10 +37,10 @@ module CachedAt
     private
     
     def update_relations_cached_at_from_cached_at(method: nil)
-      update_relations_cached_at({
+      update_relations_cached_at(
         timestamp: (self.class.column_names.include?('cached_at') ? cached_at : nil),
         method: method
-      })
+      )
     end
     
     def update_relations_cached_at(timestamp: nil, method: nil)
