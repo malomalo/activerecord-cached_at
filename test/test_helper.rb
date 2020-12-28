@@ -129,19 +129,20 @@ class ActiveSupport::TestCase
 
     def call(name, start, finish, message_id, values)
       sql = values[:sql]
+      binds = " " + values[:binds].map{|v| v.is_a?(ActiveRecord::Relation::QueryAttribute) ? v.value_for_database : v}.inspect
 
       # FIXME: this seems bad. we should probably have a better way to indicate
       # the query was cached
       return if 'CACHE' == values[:name]
 
-      self.class.log_all << sql
+      self.class.log_all << (sql + binds)
       unless ignore =~ sql
         if $debugging
-        puts caller.select { |l| l.starts_with?(File.expand_path('../../lib', __FILE__)) }
+        puts caller.select { |l| l.start_with?(File.expand_path('../../lib', __FILE__)) }
         puts "\n\n" 
         end
       end
-      self.class.log << sql unless ignore =~ sql
+      self.class.log << (sql + binds) unless ignore =~ sql
     end
   end
   ActiveSupport::Notifications.subscribe('sql.active_record', SQLLogger.new)

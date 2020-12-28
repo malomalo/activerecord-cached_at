@@ -44,7 +44,7 @@ module CachedAt
     end
     
     def update_relations_cached_at(timestamp: nil, method: nil)
-      method = instance_variable_defined?(:@new_record_before_save) && @new_record_before_save ? :create : :update if method.nil?
+      method = @_new_record_before_last_commit ? :create : :update if method.nil?
       
       diff = saved_changes.transform_values(&:first)
       return if method == :create && diff.empty?

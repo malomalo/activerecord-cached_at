@@ -12,9 +12,11 @@ module CachedAt
       cache_column = "#{reflection.inverse_of.name}_cached_at"
       ids = [owner.send(reflection.association_primary_key), owner.send("#{reflection.association_primary_key}_before_last_save")].compact.uniq
       query = klass.where({ reflection.foreign_key => ids })
-    
+      
       if loaded?
-        target.each { |r| r.send(:write_attribute_without_type_cast, cache_column, timestamp) }
+        target.each do |record|
+          record.send(:write_attribute_without_type_cast, cache_column, timestamp)
+        end
       end
       
       if method != :destroy
@@ -47,7 +49,7 @@ module CachedAt
       traverse_relationships(klass, options[:cached_at], query, cache_column, timestamp)
     end
 
-    def add_to_target(record, skip_callbacks = false, &block)
+    def add_to_target(record, skip_callbacks: false, replace: false, &block)
       value = super
       touch_records_cached_at([record], Time.now) if !(instance_variable_defined?(:@caching) && @caching)
       value
