@@ -26,7 +26,7 @@ class MigrationTest < ActiveSupport::TestCase
   test 'add_timestamps' do
     ActiveRecord::Migration.suppress_messages do
       ActiveRecord::Migration.create_table :mountains
-      ActiveRecord::Migration.add_timestamps(:mountains, {null: true})
+      ActiveRecord::Migration.add_timestamps(:mountains, null: true)
     end
     
     Mountain.reset_column_information
@@ -41,7 +41,7 @@ class MigrationTest < ActiveSupport::TestCase
   test 'remove_timestamps' do
     ActiveRecord::Migration.suppress_messages do
       ActiveRecord::Migration.create_table :mountains
-      ActiveRecord::Migration.add_timestamps(:mountains, {null: true})
+      ActiveRecord::Migration.add_timestamps(:mountains, null: true)
     end
     
     Mountain.reset_column_information
