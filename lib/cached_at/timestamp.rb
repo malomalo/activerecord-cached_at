@@ -7,7 +7,7 @@ module ActiveRecord
         private
     
         def timestamp_attributes_for_update
-          ["updated_at", "updated_on", 'cached_at'].map! { |name| attribute_aliases[name] || name }
+          ["updated_at", "updated_on"].map! { |name| attribute_aliases[name] || name }
         end
 
         def timestamp_attributes_for_create
