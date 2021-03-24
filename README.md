@@ -1,4 +1,4 @@
-# ActiveRecord - CachedAt [![Travis CI](https://travis-ci.org/malomalo/activerecord-cached_at.svg?branch=master)](https://travis-ci.org/malomalo/activerecord-cached_at)
+# ActiveRecord - CachedAt
 
 This gem causes ActiveRecord to update a `cached_at` column if present, like the
 `updated_at` column.
