@@ -11,7 +11,7 @@ module ActiveRecord
 
         column(:created_at, :datetime, **options)
         column(:updated_at, :datetime, **options)
-        column(:cached_at, :datetime,  **options)
+        column(:cached_at, :datetime,  **options) if @name != ActiveRecord::InternalMetadata.table_name
       end
     end
 
