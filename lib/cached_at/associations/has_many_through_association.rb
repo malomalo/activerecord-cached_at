@@ -15,7 +15,10 @@ module CachedAt
 
         query = nil
         if loaded?
-          target.each { |r| r.send(:write_attribute_without_type_cast, cache_column, timestamp) }
+          target.each do |record|
+            record.instance_variable_get(:@attributes).write_cast_value(cache_column, timestamp)
+            record.send(:clear_attribute_change, cache_column)
+          end
           query = klass.where(klass.primary_key => target.map(&:id))
         else
           ids = [owner.send(using_reflection.association_primary_key), owner.send("#{using_reflection.association_primary_key}_before_last_save")].compact.uniq
@@ -35,7 +38,8 @@ module CachedAt
       #TODO: test with new record (fails in mls)
       if !owner.new_record? && using_reflection.inverse_of && using_reflection.inverse_of.options[:cached_at]
         cache_column = "#{using_reflection.name}_cached_at"
-        owner.send(:write_attribute_without_type_cast, cache_column, timestamp)
+        owner.instance_variable_get(:@attributes).write_cast_value(cache_column, timestamp)
+        owner.send(:clear_attribute_change, cache_column)
         owner.update_columns(cache_column => timestamp)
       end
     end
@@ -50,7 +54,10 @@ module CachedAt
         end
 
         cache_column = "#{using_reflection.inverse_of.name}_cached_at"
-        records.each { |r| r.send(:write_attribute_without_type_cast, cache_column, timestamp) }
+        records.each do |record|
+          record.instance_variable_get(:@attributes).write_cast_value(cache_column, timestamp)
+          record.send(:clear_attribute_change, cache_column)
+        end
         query = klass.where(klass.primary_key => records.map(&:id))
         query.update_all({ cache_column => timestamp })
         traverse_relationships(klass, using_reflection.options[:cached_at], query, cache_column, timestamp)

@@ -41,7 +41,8 @@ module CachedAt
         
         source_assoc = owner.association(r.source_reflection_name.to_sym)
         if source_assoc.loaded?
-          source_assoc.target.send(:write_attribute_without_type_cast, cache_column, timestamp)
+          source_assoc.target.instance_variable_get(:@attributes).write_cast_value(cache_column, timestamp)
+          source_assoc.target.send(:clear_attribute_change, cache_column)
         end
         query = r.klass.where(r.association_primary_key => owner.send(r.foreign_key))
         query.update_all({ cache_column => timestamp })

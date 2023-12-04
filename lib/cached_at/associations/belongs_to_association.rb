@@ -45,7 +45,8 @@ module CachedAt
       end
       
       if loaded? && target
-        target.send(:write_attribute_without_type_cast, cache_column, timestamp)
+        target.instance_variable_get(:@attributes).write_cast_value(cache_column, timestamp)
+        target.send(:clear_attribute_change, cache_column)
       end
     end
     
@@ -54,7 +55,8 @@ module CachedAt
         timestamp = Time.now
         cache_column = "#{options[:inverse_of]}_cached_at"
         if loaded? && target
-          target.send(:write_attribute_without_type_cast, cache_column, timestamp)
+          target.instance_variable_get(:@attributes).write_cast_value(cache_column, timestamp)
+          target.send(:clear_attribute_change, cache_column)
         end
       end
       

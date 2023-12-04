@@ -15,7 +15,8 @@ module CachedAt
       
       if loaded?
         target.each do |record|
-          record.send(:write_attribute_without_type_cast, cache_column, timestamp)
+          record.instance_variable_get(:@attributes).write_cast_value(cache_column, timestamp)
+          record.send(:clear_attribute_change, cache_column)
         end
       end
       
@@ -42,7 +43,12 @@ module CachedAt
 
       cache_column = "#{reflection.inverse_of.name}_cached_at"
 
-      records.each { |r| r.send(:write_attribute_without_type_cast, cache_column, timestamp) unless r.destroyed? }
+      records.each do |record|
+        next if record.destroyed?
+        
+        record.instance_variable_get(:@attributes).write_cast_value(cache_column, timestamp)
+        record.send(:clear_attribute_change, cache_column)
+      end
 
       query = klass.where({ klass.primary_key => records.map(&:id) })
       query.update_all({ cache_column => timestamp })
