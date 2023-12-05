@@ -47,14 +47,38 @@ class ActiveSupport::TestCase
   end
   
   set_callback(:setup, :before) do
-    ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
+    case ENV["AR_ADAPTER"]
+    when 'postgres'
+      ActiveRecord::Base.establish_connection({
+        adapter:  "postgresql",
+        database: "activerecord_cached_at_test",
+        encoding: "utf8"
+      })
+
+      db_config = ActiveRecord::Base.connection_db_config
+      task = ActiveRecord::Tasks::PostgreSQLDatabaseTasks.new(db_config)
+      task.drop
+      task.create
+    when 'sqlite'
+      ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
+    end
+
 
     if !instance_variable_defined?(:@suite_setup_run) && self.class.class_variable_defined?(:@@schema)
       ActiveRecord::Migration.suppress_messages do
         ActiveRecord::Schema.define(&self.class.class_variable_get(:@@schema))
         ActiveRecord::Base.connection.data_sources.each do |table|
-          next if table == 'ar_internal_metadata'
-          ActiveRecord::Migration.execute("INSERT INTO SQLITE_SEQUENCE (name,seq) VALUES ('#{table}', #{rand(50_000)})")
+          next if %w(schema_migrations ar_internal_metadata).include?(table)
+          case ENV["AR_ADAPTER"]
+          when 'postgres'
+            ActiveRecord::Migration.execute(<<~SQL)
+              ALTER SEQUENCE IF EXISTS #{table}_id_seq RESTART WITH #{rand(50_000)}
+            SQL
+          when 'sqlite'
+            ActiveRecord::Migration.execute(<<~SQL)
+              INSERT INTO SQLITE_SEQUENCE (name,seq) VALUES ('#{table}', #{rand(50_000)})
+            SQL
+          end
         end
       end
     end

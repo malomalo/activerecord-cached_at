@@ -62,7 +62,7 @@ module CachedAt
           timestamp = timestamp_keys.map { |attr| self[attr]&.to_time }.compact.max
         end
         
-        timestamp.utc.to_s(:usec)
+        timestamp.utc.to_fs(:usec)
       end
 
       # TODO

@@ -5,14 +5,28 @@ Bundler.require(:development)
 require 'fileutils'
 require "rake/testtask"
 
-# Test Task
-Rake::TestTask.new do |t|
-    t.libs << 'lib' << 'test'
-    t.test_files = FileList[ARGV[1] ? ARGV[1] : 'test/**/*_test.rb']
-    t.warning = true
-    # t.verbose = true
+# ==== Test Tasks =============================================================
+ADAPTERS = %w(postgres sqlite)
+
+namespace :test do
+  ADAPTERS.each do |adapter|
+    Rake::TestTask.new(adapter => "#{adapter}:setup") do |t|
+        t.libs << 'lib' << 'test'
+        t.test_files = FileList[ARGV[1] ? ARGV[1] : 'test/**/*_test.rb']
+        t.warning = false
+        t.verbose = true
+    end
+    
+    namespace adapter do
+      task(:setup) { ENV["AR_ADAPTER"] = adapter }
+    end
+  end
+  
+  desc "Run test with all adapters"
+  task all: ADAPTERS.shuffle.map{ |e| "test:#{e}" }
 end
 
+task test: "test:all"
 
 # # require "sdoc"
 # RDoc::Task.new do |rdoc|
