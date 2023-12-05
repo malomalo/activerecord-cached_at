@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        rails: ['7.0.8']
+        rails: ['7.1.0', '7.1.2']
         ruby-version: ['3.1']
         postgres-version: ['15']
 
@@ -50,7 +50,7 @@ jobs:
 
     strategy:
       matrix:
-        rails: ['v7.0.8']
+        rails: ['v7.1.0', 'v7.1.2']
         ruby-version: ['3.1']
         postgres-version: ['15']
 
@@ -102,7 +102,7 @@ jobs:
 
     strategy:
       matrix:
-        rails: ['v7.0.8']
+        rails: ['v7.1.0', 'v7.1.2']
         ruby-version: ['3.1']
         postgres-version: ['15']
         
@@ -141,7 +141,7 @@ jobs:
 
     strategy:
       matrix:
-        rails: ['v7.0.8']
+        rails: ['v7.1.0', 'v7.1.2']
         ruby-version: ['3.1']
         postgres-version: ['15']
 
