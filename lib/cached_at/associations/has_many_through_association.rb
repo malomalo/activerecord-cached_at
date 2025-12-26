@@ -22,7 +22,7 @@ module CachedAt
           query = klass.where(klass.primary_key => target.map(&:id))
         else
           ids = [owner.send(using_reflection.association_primary_key), owner.send("#{using_reflection.association_primary_key}_before_last_save")].compact.uniq
-          arel_table = klass._reflections[using_reflection.inverse_of.options[:through].to_s].klass.arel_table
+          arel_table = klass._reflections[using_reflection.inverse_of.options[:through].to_sym].klass.arel_table
           query = klass.joins(using_reflection.inverse_of.options[:through])
           query = if using_reflection.is_a?(ActiveRecord::Reflection::HasAndBelongsToManyReflection)
             query.where(arel_table[using_reflection.foreign_key].in(ids))

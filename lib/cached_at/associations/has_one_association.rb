@@ -29,24 +29,6 @@ module CachedAt
       end
     end
     
-    def delete(method = options[:dependent])
-      if load_target
-        case method
-        when :delete
-          target.delete
-        when :destroy
-          target.destroy
-        when :nullify
-          updates = {reflection.foreign_key => nil}
-          if reflection.options[:cached_at]
-            cache_column = "#{reflection.inverse_of.name}_cached_at"
-            updates[cache_column] = Time.now
-          end
-          target.update_columns(updates) if target.persisted?
-        end
-      end
-    end
-    
   end
 end
 

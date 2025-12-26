@@ -8,13 +8,21 @@ on:
 jobs:
   sunstone:
     name: ActiveRecord::CachedAt Test
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
+      fail-fast: false
       matrix:
-        rails: ['7.1.0', '7.1.2']
-        ruby-version: ['3.1']
-        postgres-version: ['15']
+        rails-version:
+          - 7.2
+          - 8.0
+          - 8.1
+        ruby-version:
+          - 3.3
+          - 3.4
+          - 4.0
+        postgres-version:
+          - 18
 
     steps:
       - name: Install Postgresql
@@ -36,25 +44,30 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby-version }}
-          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+          bundler-cache: false # runs 'bundle install' and caches installed gems automatically
 
       - run: |
-          sed -i -e "s/spec.add_runtime_dependency 'activerecord', '>= [[:digit:]]\+.[[:digit:]]\+.[[:digit:]]\+'/spec.add_runtime_dependency 'activerecord', '${{ matrix.rails }}'/" activerecord-cached_at.gemspec 
-          rm Gemfile.lock
-          bundle
+          sed -i -e "s/spec.add_runtime_dependency 'activerecord', '>= [[:digit:]]\+.[[:digit:]]\+.[[:digit:]]\+'/spec.add_runtime_dependency 'activerecord', '${{ matrix.rails-version }}'/" activerecord-cached_at.gemspec
+          bundle install --jobs=3 --retry=3
+          bundle update --jobs=3 --retry=3
 
       - run: bundle exec rake test
 
   ar-postgresql:
     name: ActiveRecord PostgresQL Test
+    runs-on: ubuntu-24.04
 
     strategy:
+      fail-fast: false
       matrix:
-        rails: ['v7.1.0', 'v7.1.2']
-        ruby-version: ['3.1']
-        postgres-version: ['15']
-
-    runs-on: ubuntu-22.04
+        rails-version:
+          - 7.2.3
+          - 8.0.4
+          - 8.1.1
+        ruby-version:
+          - 3.4
+        postgres-version:
+          - 18
 
     steps:
       - name: Install Postgresql
@@ -80,7 +93,7 @@ jobs:
 
       - name: Download Rails
         run: |
-          git clone --branch ${{ matrix.rails }} https://github.com/rails/rails.git ~/rails
+          git clone --branch v${{ matrix.rails-version }} https://github.com/rails/rails.git ~/rails
           pushd ~/rails
           cat /home/runner/work/_temp/*.sh
           sed -i "s/Gem.ruby, '-w'/Gem.ruby, '-w0'/" ~/rails/activerecord/Rakefile
@@ -89,7 +102,18 @@ jobs:
           rm ~/rails/Gemfile.lock
           sed -i "/# Active Record./a gem 'activerecord-cached_at', require: 'cached_at', path: File.expand_path\(ENV['GITHUB_WORKSPACE']\)" ~/rails/Gemfile
           cat ~/rails/Gemfile
+
+      - name: This can eventually be removed
+        run: |
+          sed -i 's/gem "minitest"$/gem "minitest"\ngem "minitest-mock", require: "minitest\/mock"/' ~/rails/Gemfile
+          sed -i 's/module ActiveRecord$/module Rails\nend\nmodule ActiveRecord/' ~/rails/activerecord/test/cases/adapters/postgresql/postgresql_adapter_test.rb || true
+          sed -i 's/t.options = "--profile" if ENV\["CI"\]//g' ~/rails/activerecord/Rakefile
+
+      - name: Bundle
+        run: |
+          pushd ~/rails
           bundle update --jobs=3 --retry=3
+          popd
 
       - run: |
           pushd ~/rails/activerecord
@@ -98,13 +122,16 @@ jobs:
           
   ar-sqlite:
     name: ActiveRecord SQLite Test
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
-        rails: ['v7.1.0', 'v7.1.2']
-        ruby-version: ['3.1']
-        postgres-version: ['15']
+        rails-version:
+          - 7.2.3
+          - 8.0.4
+          - 8.1.1
+        ruby-version:
+          - 3.4
         
     steps:
       - uses: actions/checkout@v4
@@ -116,7 +143,7 @@ jobs:
 
       - name: Download Rails
         run: |
-          git clone --branch ${{ matrix.rails }} https://github.com/rails/rails.git ~/rails
+          git clone --branch v${{ matrix.rails-version }} https://github.com/rails/rails.git ~/rails
           pushd ~/rails
           cat /home/runner/work/_temp/*.sh
           sed -i "s/Gem.ruby, '-w'/Gem.ruby, '-w0'/" ~/rails/activerecord/Rakefile
@@ -125,7 +152,21 @@ jobs:
           rm ~/rails/Gemfile.lock
           sed -i "/# Active Record./a gem 'activerecord-cached_at', require: 'cached_at', path: File.expand_path\(ENV['GITHUB_WORKSPACE']\)" ~/rails/Gemfile
           cat ~/rails/Gemfile
+      
+      - name: This can eventually be removed
+        run: |
+          sed -i 's/gem "minitest"$/gem "minitest"\ngem "minitest-mock", require: "minitest\/mock"/' ~/rails/Gemfile
+          cat ~/rails/Gemfile
+          sed -i 's/module ActiveRecord$/module Rails\nend\nmodule ActiveRecord/' ~/rails/activerecord/test/cases/adapters/sqlite3/dbconsole_test.rb
+          cat  ~/rails/activerecord/test/cases/adapters/sqlite3/dbconsole_test.rb
+          sed -i 's/t.options = "--profile" if ENV\["CI"\]//g' ~/rails/activerecord/Rakefile
+          cat ~/rails/activerecord/Rakefile
+
+      - name: Bundle
+        run: |
+          pushd ~/rails
           bundle update --jobs=3 --retry=3
+          popd
 
       - run: |
           pushd ~/rails/activerecord
@@ -137,13 +178,16 @@ jobs:
         
   ar-mysql:
     name: ActiveRecord MySQL Test
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
-        rails: ['v7.1.0', 'v7.1.2']
-        ruby-version: ['3.1']
-        postgres-version: ['15']
+        rails-version:
+          - 7.2.3
+          - 8.0.4
+          - 8.1.1
+        ruby-version:
+          - 3.4
 
     steps:
       - name: Install MySQL
@@ -161,7 +205,7 @@ jobs:
     
       - name: Download Rails
         run: |
-          git clone --branch ${{ matrix.rails }} https://github.com/rails/rails.git ~/rails
+          git clone --branch v${{ matrix.rails-version }} https://github.com/rails/rails.git ~/rails
           pushd ~/rails
           cat /home/runner/work/_temp/*.sh
           sed -i "s/Gem.ruby, '-w'/Gem.ruby, '-w0'/" ~/rails/activerecord/Rakefile
@@ -170,7 +214,20 @@ jobs:
           rm ~/rails/Gemfile.lock
           sed -i "/# Active Record./a gem 'activerecord-cached_at', require: 'cached_at', path: File.expand_path\(ENV['GITHUB_WORKSPACE']\)" ~/rails/Gemfile
           cat ~/rails/Gemfile
+      
+      - name: This can eventually be removed
+        run: |
+          sed -i 's/gem "minitest"$/gem "minitest"\ngem "minitest-mock", require: "minitest\/mock"/' ~/rails/Gemfile
+          sed -i 's/class WarningsTest < ActiveRecord::AbstractMysqlTestCase$/module Rails\nend\nclass WarningsTest < ActiveRecord::AbstractMysqlTestCase/' ~/rails/activerecord/test/cases/adapters/abstract_mysql_adapter/warnings_test.rb || true
+          sed -i 's/class Mysql2AdapterTest < ActiveRecord::Mysql2TestCase$/module Rails\nend\nclass Mysql2AdapterTest < ActiveRecord::Mysql2TestCase/' ~/rails/activerecord/test/cases/adapters/mysql2/mysql2_adapter_test.rb || true
+          sed -i 's/t.options = "--profile" if ENV\["CI"\]//g' ~/rails/activerecord/Rakefile
+          cat ~/rails/activerecord/Rakefile
+
+      - name: Bundle
+        run: |
+          pushd ~/rails
           bundle update --jobs=3 --retry=3
+          popd
 
       - run: |
           pushd ~/rails/activerecord

@@ -9,7 +9,6 @@ end
 $LOAD_PATH << File.expand_path('../lib', __FILE__)
 
 require "minitest/autorun"
-require 'minitest/unit'
 require 'minitest/reporters'
 require 'cached_at'
 
@@ -131,7 +130,20 @@ class ActiveSupport::TestCase
 
     self.clear_log
 
-    self.ignored_sql = [/^PRAGMA/i, /^SELECT currval/i, /^SELECT CAST/i, /^SELECT @@IDENTITY/i, /^SELECT @@ROWCOUNT/i, /^SAVEPOINT/i, /^ROLLBACK TO SAVEPOINT/i, /^RELEASE SAVEPOINT/i, /^SHOW max_identifier_length/i, /^BEGIN/i, /^COMMIT/i]
+    self.ignored_sql = [
+      /^PRAGMA/i,
+      /^SELECT currval/i,
+      /^SELECT CAST/i,
+      /^SELECT @@IDENTITY/i,
+      /^SELECT @@ROWCOUNT/i,
+      /^SAVEPOINT/i,
+      /^ROLLBACK TO SAVEPOINT/i,
+      /^RELEASE SAVEPOINT/i,
+      /^SHOW max_identifier_length/i,
+      /^BEGIN/i,
+      /^COMMIT/i,
+      /^SELECT name FROM pragma_table_list/i
+    ]
 
     # FIXME: this needs to be refactored so specific database can add their own
     # ignored SQL, or better yet, use a different notification for the queries
