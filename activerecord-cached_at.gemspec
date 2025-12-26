@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.test_files    = `git ls-files -- {test}/*`.split("\n")
   spec.require_paths = ["lib"]
 
-  spec.add_runtime_dependency 'activerecord', '>= 7.1.0'
+  spec.add_runtime_dependency 'activerecord', '>= 7.2.0'
     
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "sqlite3"
   spec.add_development_dependency "simplecov"
   spec.add_development_dependency "byebug"
+  spec.add_development_dependency "benchmark"
   # spec.add_development_dependency 'sdoc',                '~> 0.4'
   # spec.add_development_dependency 'sdoc-templates-42floors', '~> 0.3'
 end
